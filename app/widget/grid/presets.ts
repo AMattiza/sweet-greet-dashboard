@@ -8,7 +8,7 @@ export const PRESETS: Record<string, KPIConf[]> = {
     {
       label: "Follow-up Termine",
       table: "Aktivitäten",
-      formula: AND({Follow Up Abschluss} = BLANK(), IS_SAME({Follow-up Datum}, TODAY(), 'day')),
+      formula: "AND({Follow Up Abschluss} = BLANK(), IS_SAME({Follow-up Datum}, TODAY(), 'day'))",
       dateField: "Follow-up Datum",
       redDays: "0",
       target: "https://www.suesse-gruesse.online/vertrieb#tab5"
