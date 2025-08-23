@@ -7,9 +7,9 @@ export const PRESETS: Record<string, KPIConf[]> = {
   "vertrieb": [
     {
       label: "Follow-up Termine",
-      table: "Termine",
+      table: "Aktivitäten",
       formula: "NOT({Erledigt})",
-      dateField: "Datum",
+      dateField: "Follow-up Datum",
       redDays: "0",
       target: "https://www.suesse-gruesse.online/vertrieb#tab5"
     },
