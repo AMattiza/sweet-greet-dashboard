@@ -7,7 +7,11 @@ type ApiResp = { count: number; maxAgeDays: number; status: "green"|"amber"|"red
 
 function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
   const color = err ? "red" : data?.status || "amber";
-  const bg = color==="green"?"#d1f0d5":color==="red"?"#ffd8d6":"#fff3c4";
+  const bg =
+    color==="green" ? "#9EB384" :
+    color==="red"   ? "#E57373" :
+                      "#E6C972";   // amber / gelb
+
   const sub = err ? err : !data ? "Lade..." :
     data.status==="green" ? "Alles erledigt" :
     data.status==="red" ? `Älteste offen: ${data.maxAgeDays} Tage` :
@@ -74,7 +78,6 @@ export default function GridInner(){
     });
   },[b64,preset]);
 
-  // ⬇️ Hier gehört der resize-Effekt REIN
   useEffect(() => {
     const resize = () => {
       const h = document.documentElement.scrollHeight;
@@ -86,7 +89,12 @@ export default function GridInner(){
   }, []);
 
   return (
-    <div style={{display:"flex",flexWrap:"wrap",justifyContent:"space-between"}}>
+    <div style={{
+      display:"flex",
+      flexWrap:"wrap",
+      justifyContent:"center",
+      padding:"24px 0"  // gleichmäßiger Abstand oben/unten
+    }}>
       {items.map((it,idx)=><Card key={idx} {...it}/>)}
     </div>
   );
