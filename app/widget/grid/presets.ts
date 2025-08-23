@@ -31,9 +31,9 @@ export const PRESETS: Record<string, KPIConf[]> = {
     },
     {
       label: "Kartenproduktion",
-      table: "Aufträge",
-      formula: "NOT({ProdFreigegeben})",
-      dateField: "AngelegtAm",
+      table: "Projects",
+      formula: "AND({Händler Freigaben} != BLANK(), {Freigaben} = BLANK())",
+      dateField: "Auftragsdatum",
       redDays: "2",
       target: "https://www.suesse-gruesse.online/freigabe#tab2"
     }
