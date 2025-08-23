@@ -6,7 +6,7 @@ export type KPIConf = {
 export const PRESETS: Record<string, KPIConf[]> = {
   "vertrieb": [
     {
-      label: "Follow-up Termine",
+      label: "Follow-up Termine heute",
       table: "Aktivitäten",
       formula: "AND({Follow Up Abschluss} = BLANK(), IS_SAME({Follow-up Datum}, TODAY(), 'day'))",
       dateField: "Follow-up Datum",
@@ -22,7 +22,7 @@ export const PRESETS: Record<string, KPIConf[]> = {
       target: "https://www.suesse-gruesse.online/vertrieb#tab5"
     },
     {
-      label: "Projektfreigabe",
+      label: "Freigabe für Layouterstellung",
       table: "Projects",
       formula: "{Vertriebsmitarbeiter} = BLANK()",
       dateField: "Auftragsdatum",
@@ -30,7 +30,7 @@ export const PRESETS: Record<string, KPIConf[]> = {
       target: "https://www.suesse-gruesse.online/freigabe"
     },
     {
-      label: "Kartenproduktion",
+      label: "Freigabe für Postkartenproduktion",
       table: "Projects",
       formula: "AND({Händler Freigaben} != BLANK(), {Freigaben} = BLANK())",
       dateField: "Auftragsdatum",
