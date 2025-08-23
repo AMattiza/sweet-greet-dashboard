@@ -21,11 +21,15 @@ function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
       color:"#101828",margin:8
     }}>
       <div style={{fontSize:13,opacity:.8,marginBottom:6,fontWeight:500}}>{conf.label}</div>
-      <div style={{fontSize:36,fontWeight:700,lineHeight:"40px",marginBottom:6}}>{err ? "!" : data ? data.count : "…"}</div>
+      <div style={{fontSize:36,fontWeight:700,lineHeight:"40px",marginBottom:6}}>
+        {err ? "!" : data ? data.count : "…"}
+      </div>
       <div style={{fontSize:12,opacity:.8}}>{sub}</div>
     </div>
   );
-  return conf.target ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{textDecoration:"none",flex:1}}>{card}</a> : card;
+  return conf.target 
+    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{textDecoration:"none",flex:1}}>{card}</a> 
+    : card;
 }
 
 export default function GridInner(){
@@ -59,13 +63,31 @@ export default function GridInner(){
       if(c.formula) u.searchParams.set("formula", c.formula);
       if(c.dateField) u.searchParams.set("dateField", c.dateField);
       if(c.redDays) u.searchParams.set("redDays", c.redDays);
-      fetch(u.toString()).then(r=>r.json()).then(data=>{
-        setItems(prev => { const copy=[...prev]; copy[i]={conf:c,data}; return copy; });
-      }).catch(e=>{
-        setItems(prev => { const copy=[...prev]; copy[i]={conf:c,err:String(e)}; return copy; });
-      });
+      fetch(u.toString())
+        .then(r=>r.json())
+        .then(data=>{
+          setItems(prev => { const copy=[...prev]; copy[i]={conf:c,data}; return copy; });
+        })
+        .catch(e=>{
+          setItems(prev => { const copy=[...prev]; copy[i]={conf:c,err:String(e)}; return copy; });
+        });
     });
   },[b64,preset]);
 
-  return <div style={{display:"flex",flexWrap:"wrap",justifyContent:"space-between"}}>{items.map((it,idx)=><Card key={idx} {...it}/>)}</div>;
+  // ⬇️ Hier gehört der resize-Effekt REIN
+  useEffect(() => {
+    const resize = () => {
+      const h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: "resize-iframe", height: h }, "*");
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
+  return (
+    <div style={{display:"flex",flexWrap:"wrap",justifyContent:"space-between"}}>
+      {items.map((it,idx)=><Card key={idx} {...it}/>)}
+    </div>
+  );
 }
