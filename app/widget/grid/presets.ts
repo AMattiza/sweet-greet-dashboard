@@ -8,7 +8,7 @@ export const PRESETS: Record<string, KPIConf[]> = {
     {
       label: "Follow-up Termine",
       table: "Aktivitäten",
-      formula: "AND({Erledigt}=BLANK(), IS_BEFORE({Follow-up Datum}, DATEADD(TODAY(), 7, 'days')))",
+      formula: "AND({Follow Up Abschluss} = BLANK(), IS_BEFORE({Follow-up Datum}, DATEADD(TODAY(), 8, 'days')))",
       dateField: "Follow-up Datum",
       redDays: "0",
       target: "https://www.suesse-gruesse.online/vertrieb#tab5"
