@@ -25,6 +25,8 @@ export const PRESETS: Record<string, KPIConf[]> = {
       label: "Projektfreigabe",
       table: "Projekte",
       formula: "{Vertriebsmitarbeiter} = BLANK()",
+      dateField: "Auftragsdatum",
+      redDays: "2",
       target: "https://www.suesse-gruesse.online/freigabe"
     },
     {
