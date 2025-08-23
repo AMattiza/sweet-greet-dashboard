@@ -22,7 +22,7 @@ function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
       fontFamily:"Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
       borderRadius:12,padding:18,minWidth:220,flex:1,background:bg,
       border:"1px solid rgba(0,0,0,0.08)",boxShadow:"0 2px 10px rgba(0,0,0,0.06)",
-      color:"#101828",margin:8
+      color:"#ffffff",margin:8
     }}>
       <div style={{fontSize:13,opacity:.8,marginBottom:6,fontWeight:500}}>{conf.label}</div>
       <div style={{fontSize:36,fontWeight:700,lineHeight:"40px",marginBottom:6}}>
