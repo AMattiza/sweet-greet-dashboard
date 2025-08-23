@@ -23,7 +23,7 @@ export const PRESETS: Record<string, KPIConf[]> = {
     },
     {
       label: "Projektfreigabe",
-      table: "Projekte",
+      table: "Projects",
       formula: "{Vertriebsmitarbeiter} = BLANK()",
       dateField: "Auftragsdatum",
       redDays: "2",
