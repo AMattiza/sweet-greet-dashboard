@@ -64,7 +64,7 @@ export default function GridInner() {
   }, [confs]);
 
 return (
-  <div id="kpi-root" data-iframe-size>
+  <div id="kpi-root" data-iframe-height>
     <div className="grid-container">
       {items.map((it, idx) => <Card key={idx} {...it} />)}
     </div>
