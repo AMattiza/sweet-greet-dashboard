@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import base from "@/app/airtable";
+import base from "../../../lib/airtable";   // ✅ korrigierter Pfad
 
 export async function GET(req: Request) {
   try {
@@ -22,7 +22,9 @@ export async function GET(req: Request) {
 
     if (list) {
       // alle Records zurückgeben (für Modal-Ansicht)
-      return NextResponse.json({ records: recs.map(r => ({ id: r.id, fields: r.fields })) });
+      return NextResponse.json({
+        records: recs.map(r => ({ id: r.id, fields: r.fields }))
+      });
     }
 
     // Zähler & maxAge berechnen
