@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
+
 import { NextResponse } from "next/server";
 import { listRecords } from "../../../lib/airtable";
 
@@ -19,12 +20,20 @@ export async function GET(req: Request) {
 
     console.log("📊 KPI-Request:", { table, view, formula, dateField, redDays, list });
 
+    // 👉 Debug-Ausgabe: Welche Query geht an Airtable?
+    console.log("👉 Airtable Query Params:", {
+      baseId: process.env.AIRTABLE_BASE_ID!,
+      table,
+      view,
+      formula,
+    });
+
     // Airtable Records laden über Wrapper
     const recs = await listRecords({
       baseId: process.env.AIRTABLE_BASE_ID!,
       table,
       view,
-      filterByFormula: formula
+      filterByFormula: formula,
     });
 
     console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
@@ -44,13 +53,17 @@ export async function GET(req: Request) {
         const dVal = rec.fields[dateField];
         if (dVal) {
           const d = new Date(dVal as string);
-          const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          const diff = Math.floor(
+            (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)
+          );
           if (diff > maxAgeDays) maxAgeDays = diff;
         }
       }
     }
 
-    console.log(`📈 Ergebnis: count=${count}, maxAgeDays=${maxAgeDays}, redDays=${redDays}`);
+    console.log(
+      `📈 Ergebnis: count=${count}, maxAgeDays=${maxAgeDays}, redDays=${redDays}`
+    );
 
     let status: "green" | "amber" | "red" = "amber";
     if (count === 0) {
@@ -62,7 +75,6 @@ export async function GET(req: Request) {
     console.log(`🎨 Status für "${table}": ${status}`);
 
     return NextResponse.json({ count, maxAgeDays, status });
-
   } catch (err: any) {
     console.error("❌ API-Fehler:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
