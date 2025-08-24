@@ -1,35 +1,58 @@
 import { NextResponse } from "next/server";
-import Airtable from "airtable";
-
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID!);
+import base from "@/app/airtable";
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const table = searchParams.get("table")!;
-  const view = searchParams.get("view") || undefined;
-  const formula = searchParams.get("formula") || undefined;
-  const dateField = searchParams.get("dateField") || undefined;
-  const redDays = parseInt(searchParams.get("redDays")||"0");
-  const list = searchParams.get("list");
+  try {
+    const { searchParams } = new URL(req.url);
 
-  const recs = await base(table).select({ view, filterByFormula: formula }).all();
+    const table = searchParams.get("table")!;
+    const view = searchParams.get("view") || undefined;
+    const formula = searchParams.get("formula")
+      ? decodeURIComponent(searchParams.get("formula")!)
+      : undefined;
+    const dateField = searchParams.get("dateField") || undefined;
+    const redDays = parseInt(searchParams.get("redDays") || "0");
+    const list = searchParams.get("list");
 
-  const count = recs.length;
-  let maxAgeDays = 0;
-  if(dateField){
-    const dates = recs.map(r => r.get(dateField) ? new Date(r.get(dateField) as string) : null).filter(Boolean) as Date[];
-    if(dates.length){
-      const diffs = dates.map(d => Math.floor((Date.now() - d.getTime())/86400000));
-      maxAgeDays = Math.max(...diffs);
+    // Airtable Query
+    const recs = await base(table).select({
+      view,
+      filterByFormula: formula
+    }).all();
+
+    if (list) {
+      // alle Records zurückgeben (für Modal-Ansicht)
+      return NextResponse.json({ records: recs.map(r => ({ id: r.id, fields: r.fields })) });
     }
-  }
 
-  let status:"green"|"amber"|"red" = "amber";
-  if(count===0) status="green";
-  else if(maxAgeDays>redDays) status="red";
+    // Zähler & maxAge berechnen
+    let count = recs.length;
+    let maxAgeDays = 0;
 
-  if(list){
-    return NextResponse.json({ count, maxAgeDays, status, records: recs.map(r => ({id:r.id, fields:r.fields})) });
+    if (dateField) {
+      const now = new Date();
+      for (const rec of recs) {
+        const dVal = rec.get(dateField);
+        if (dVal) {
+          const d = new Date(dVal as string);
+          const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          if (diff > maxAgeDays) maxAgeDays = diff;
+        }
+      }
+    }
+
+    // Status-Farbe
+    let status: "green" | "amber" | "red" = "amber";
+    if (count === 0) {
+      status = "green";
+    } else if (maxAgeDays > redDays) {
+      status = "red";
+    }
+
+    return NextResponse.json({ count, maxAgeDays, status });
+
+  } catch (err: any) {
+    console.error("❌ API-Fehler:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
-  return NextResponse.json({ count, maxAgeDays, status });
 }
