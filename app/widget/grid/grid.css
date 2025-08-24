@@ -9,6 +9,7 @@
   margin: 0 auto;
   max-width: 1200px;
   box-sizing: border-box;
+  overflow-x: hidden;   /* ✅ verhindert horizontalen Scrollbalken */
 }
 
 /* Links */
