@@ -26,7 +26,9 @@ function Card({conf, data, err, onClick}:{conf:KPIConf; data?:ApiResp; err?:stri
       color:"#FFFFFF",margin:8,cursor: conf.modal ? "pointer" : "default"
     }}>
       <div style={{fontSize:13,opacity:.9,marginBottom:6,fontWeight:500}}>{conf.label}</div>
-      <div style={{fontSize:36,fontWeight:700,lineHeight:"40px",marginBottom:6}}>{err ? "!" : data ? data.count : "…"}</div>
+      <div style={{fontSize:36,fontWeight:700,lineHeight:"40px",marginBottom:6}}>
+        {err ? "!" : data ? data.count : "…"}
+      </div>
       <div style={{fontSize:12,opacity:.9}}>{sub}</div>
     </div>
   );
@@ -48,22 +50,22 @@ export default function GridInner(){
   const [modalTitle, setModalTitle] = useState<string>("");
   const [detailUrl, setDetailUrl] = useState<string>("");
 
-  // Hilfsfunktion für sichere URL-Erstellung (mit Encoding)
+  // Hilfsfunktion für sichere URL-Erstellung (ohne Doppel-Encoding)
   const makeApiUrl = (conf: KPIConf, extraParams: Record<string,string> = {}) => {
     const base = (typeof window !== "undefined" && window.location && window.location.origin)
       ? window.location.origin
-      : "https://sweet-greet-dashboard.vercel.app"; // Fallback
+      : "https://sweet-greet-dashboard.vercel.app"; // Fallback für Softr/iFrame
 
     const u = new URL("/api/kpi", base);
 
-    if(conf.view) u.searchParams.set("view", encodeURIComponent(conf.view));
-    if(conf.formula) u.searchParams.set("formula", encodeURIComponent(conf.formula));
-    if(conf.dateField) u.searchParams.set("dateField", encodeURIComponent(conf.dateField));
+    if(conf.view) u.searchParams.set("view", conf.view);
+    if(conf.formula) u.searchParams.set("formula", conf.formula);
+    if(conf.dateField) u.searchParams.set("dateField", conf.dateField);
     if(conf.redDays) u.searchParams.set("redDays", conf.redDays);
 
-    Object.entries(extraParams).forEach(([k,v]) => u.searchParams.set(k,v));
+    Object.entries(extraParams).forEach(([k,v]) => u.searchParams.set(k, v));
 
-    u.searchParams.set("table", encodeURIComponent(conf.table));
+    u.searchParams.set("table", conf.table);
     return u.toString();
   };
 
