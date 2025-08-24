@@ -2,6 +2,7 @@
 import "./grid.css";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+
 export type KPIConf = {
   label: string;
   table: string;
@@ -14,9 +15,9 @@ export type KPIConf = {
   showDateInfo?: boolean;
   modal?: boolean;
   detailUrl?: string;
-  bereich?: string;
-  filterField?: string;
-  personen?: string[];
+  bereich?: string;        // z.B. "vertrieb", "logistik", "projekte"
+  filterField?: string;    // Feldname für Personalisierung
+  personen?: string[];     // Personen, für die das Widget relevant ist
 };
 
 type ApiResp = { count: number; maxAgeDays: number; status: "green"|"amber"|"red" };
@@ -37,6 +38,7 @@ function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
       {sub && <div className="card-sub">{sub}</div>}
     </div>
   );
+
   return conf.target
     ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{ textDecoration:"none" }}>{card}</a>
     : card;
@@ -47,7 +49,18 @@ export default function GridInner() {
   const b64 = sp.get("config");
   const presetKey = sp.get("preset") || "vertrieb";
 
+  const [allWidgets, setAllWidgets] = useState<KPIConf[]>([]);
   const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
+
+  // 1. Widgets aus API laden
+  useEffect(() => {
+    fetch("/api/widgets")
+      .then((r) => r.json())
+      .then((res) => setAllWidgets(res.widgets || []))
+      .catch((e) => console.error("⚠️ Widgets laden fehlgeschlagen:", e));
+  }, []);
+
+  // 2. Widgets auswählen (Preset oder config)
   const confs = useMemo<KPIConf[]>(() => {
     if (b64) {
       try {
@@ -55,15 +68,18 @@ export default function GridInner() {
         if (Array.isArray(parsed) && parsed.length) return parsed;
       } catch {}
     }
-    return PRESETS[presetKey] || [];
-  }, [b64, presetKey]);
+    return allWidgets.filter((w) => w.bereich === presetKey);
+  }, [b64, presetKey, allWidgets]);
 
+  // 3. API-Requests für jedes Widget starten
   useEffect(() => {
     if (!confs.length) {
       setItems([{ conf: { label: "Config fehlt", table: "—" }, err: "config oder preset ungültig" }]);
       return;
     }
+
     setItems(confs.map((c) => ({ conf: c })));
+
     confs.forEach((c, i) => {
       const u = new URL("/api/kpi", window.location.origin);
       u.searchParams.set("table", c.table);
@@ -71,18 +87,23 @@ export default function GridInner() {
       if (c.formula) u.searchParams.set("formula", c.formula);
       if (c.dateField) u.searchParams.set("dateField", c.dateField);
       if (c.redDays) u.searchParams.set("redDays", c.redDays);
+
       fetch(u.toString())
         .then((r) => r.json())
-        .then((data: ApiResp) => setItems(prev => (prev.map((p,idx)=> idx===i? {conf:c,data}:p))))
-        .catch((e) => setItems(prev => (prev.map((p,idx)=> idx===i? {conf:c,err:String(e)}:p))));
+        .then((data: ApiResp) =>
+          setItems(prev => prev.map((p,idx)=> idx===i? {conf:c,data}:p))
+        )
+        .catch((e) =>
+          setItems(prev => prev.map((p,idx)=> idx===i? {conf:c,err:String(e)}:p))
+        );
     });
   }, [confs]);
 
-return (
-  <div id="kpi-root" data-iframe-height>
-    <div className="grid-container">
-      {items.map((it, idx) => <Card key={idx} {...it} />)}
+  return (
+    <div id="kpi-root" data-iframe-height>
+      <div className="grid-container">
+        {items.map((it, idx) => <Card key={idx} {...it} />)}
+      </div>
     </div>
-  </div>
-);
+  );
 }
