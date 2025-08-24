@@ -1,59 +1,41 @@
-/* Grid Layout */
+/* verhindert künstliche Zusatzhöhe */
+:root, html, body { margin: 0; padding: 0; }
+
+/* responsives Grid */
 .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px;
   box-sizing: border-box;
+  padding: 16px;
 }
 
-/* Cards */
+/* Karten */
 .card {
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   border-radius: 12px;
   padding: 18px;
-  background: #9EB384;
+  min-width: 220px;
   border: 1px solid rgba(0,0,0,0.08);
   box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-  color: #fff;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 120px;
-  box-sizing: border-box;
 }
 
 .card-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   margin-bottom: 6px;
+  opacity: .95;
 }
 
 .card-value {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   line-height: 40px;
   margin-bottom: 6px;
 }
 
 .card-sub {
-  font-size: 13px;
-  opacity: 0.9;
-}
-
-/* Responsives Verhalten */
-@media (max-width: 900px) {
-  .grid-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 Karten nebeneinander */
-  }
-}
-
-@media (max-width: 500px) {
-  .grid-container {
-    grid-template-columns: 1fr; /* 1 Karte pro Zeile */
-  }
+  font-size: 12px;
+  opacity: .9;
 }
