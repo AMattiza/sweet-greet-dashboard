@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import base from "../../../lib/airtable";   // ✅ korrigierter Pfad
+import { listRecords } from "../../../lib/airtable";
 
 export async function GET(req: Request) {
   try {
@@ -14,17 +14,21 @@ export async function GET(req: Request) {
     const redDays = parseInt(searchParams.get("redDays") || "0");
     const list = searchParams.get("list");
 
-    // Airtable Query
-    const recs = await base(table).select({
+    console.log("📊 KPI-Request:", { table, view, formula, dateField, redDays, list });
+
+    // Airtable Records laden über Wrapper
+    const recs = await listRecords({
+      baseId: process.env.AIRTABLE_BASE_ID!,
+      table,
       view,
       filterByFormula: formula
-    }).all();
+    });
+
+    console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
 
     if (list) {
-      // alle Records zurückgeben (für Modal-Ansicht)
-      return NextResponse.json({
-        records: recs.map(r => ({ id: r.id, fields: r.fields }))
-      });
+      console.log("🔍 Detail-List-Modus aktiv → gebe alle Records zurück");
+      return NextResponse.json({ records: recs });
     }
 
     // Zähler & maxAge berechnen
@@ -34,7 +38,7 @@ export async function GET(req: Request) {
     if (dateField) {
       const now = new Date();
       for (const rec of recs) {
-        const dVal = rec.get(dateField);
+        const dVal = rec.fields[dateField];
         if (dVal) {
           const d = new Date(dVal as string);
           const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
@@ -43,13 +47,16 @@ export async function GET(req: Request) {
       }
     }
 
-    // Status-Farbe
+    console.log(`📈 Ergebnis: count=${count}, maxAgeDays=${maxAgeDays}, redDays=${redDays}`);
+
     let status: "green" | "amber" | "red" = "amber";
     if (count === 0) {
       status = "green";
     } else if (maxAgeDays > redDays) {
       status = "red";
     }
+
+    console.log(`🎨 Status für "${table}": ${status}`);
 
     return NextResponse.json({ count, maxAgeDays, status });
 
