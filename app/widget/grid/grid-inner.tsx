@@ -63,12 +63,14 @@ export default function GridInner() {
     });
   }, [confs]);
 
-  return (
-    {/*  ⬇️  Genau dieses Element wird vom Parent gemessen */}
+return (
+  <>
+    {/* Dieses Element wird vom Parent gemessen */}
     <div id="kpi-root" data-iframe-size data-iframe-height>
       <div className="grid-container">
         {items.map((it, idx) => <Card key={idx} {...it} />)}
       </div>
     </div>
-  );
+  </>
+);
 }
