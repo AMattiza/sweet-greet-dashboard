@@ -21,9 +21,21 @@ function Card({conf, data, err, onClick}:{conf:KPIConf; data?:ApiResp; err?:stri
   const card = (
     <div style={{
       fontFamily:"Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-      borderRadius:12,padding:18,minWidth:220,flex:1,background:bg,
-      border:"1px solid rgba(0,0,0,0.08)",boxShadow:"0 2px 10px rgba(0,0,0,0.06)",
-      color:"#FFFFFF",margin:8,cursor: conf.modal ? "pointer" : "default"
+      borderRadius:12,
+      padding:18,
+      minWidth:220,
+      flex:1,
+      background:bg,
+      border:"1px solid rgba(0,0,0,0.08)",
+      boxShadow:"0 2px 10px rgba(0,0,0,0.06)",
+      color:"#FFFFFF",
+      margin:8,
+      cursor: conf.modal ? "pointer" : "default",
+      display:"flex",
+      flexDirection:"column",
+      justifyContent:"center",     // ✅ Inhalt vertikal mittig
+      textAlign:"center",          // ✅ Text auch mittig
+      height:"100%"                // ✅ passt sich Grid-Höhe an
     }}>
       <div style={{fontSize:13,opacity:.9,marginBottom:6,fontWeight:500}}>{conf.label}</div>
       <div style={{fontSize:36,fontWeight:700,lineHeight:"40px",marginBottom:6}}>
@@ -33,10 +45,10 @@ function Card({conf, data, err, onClick}:{conf:KPIConf; data?:ApiResp; err?:stri
     </div>
   );
   if(conf.modal && onClick){
-    return <div onClick={onClick} style={{flex:1}}>{card}</div>;
+    return <div onClick={onClick} style={{flex:1, height:"100%"}}>{card}</div>;
   }
   return conf.target 
-    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{textDecoration:"none",flex:1}}>{card}</a> 
+    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{textDecoration:"none",flex:1, height:"100%"}}>{card}</a> 
     : card;
 }
 
@@ -50,7 +62,6 @@ export default function GridInner(){
   const [modalTitle, setModalTitle] = useState<string>("");
   const [detailUrl, setDetailUrl] = useState<string>("");
 
-  // sichere URL-Erstellung
   const makeApiUrl = (conf: KPIConf, extraParams: Record<string,string> = {}) => {
     if(!conf.table) throw new Error("❌ Preset ohne table: " + JSON.stringify(conf));
 
@@ -134,7 +145,12 @@ export default function GridInner(){
       <div style={{
         display:"grid",
         gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))",
-        gap:"16px"
+        gap:"16px",
+        alignItems:"stretch",     // ✅ gleiche Höhe in der Reihe
+        justifyItems:"center",    // ✅ Widgets mittig
+        minHeight:"100vh",        // ✅ volle Bildschirmhöhe
+        padding:"24px",           // ✅ schöner Innenabstand
+        boxSizing:"border-box"
       }}>
         {items.map((it,idx)=>
           <Card key={idx} {...it} onClick={() => it.conf.modal && openModal(it.conf)} />
