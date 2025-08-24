@@ -1,17 +1,16 @@
 "use client";
 
-import Script from "next/script";
+import { Suspense } from "react";
 import GridInner from "./grid-inner";
 
-export default function Page() {
+// optional, aber empfehlenswert: verhindert Prerender/ISR
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default function GridPage() {
   return (
-    <>
-      {/* Child-Skript von iframe-resizer – misst Höhe im iFrame */}
-      <Script
-        src="https://cdn.jsdelivr.net/npm/iframe-resizer/js/iframeResizer.contentWindow.min.js"
-        strategy="beforeInteractive"
-      />
+    <Suspense fallback={<div style={{ padding: 16, textAlign: "center" }}>Lade Dashboard…</div>}>
       <GridInner />
-    </>
+    </Suspense>
   );
 }
