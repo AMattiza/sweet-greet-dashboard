@@ -1,6 +1,15 @@
 export type KPIConf = {
-  label: string; table: string; view?: string; formula?: string;
-  dateField?: string; redDays?: string; target?: string; targetBlank?: boolean;
+  label: string;
+  table: string;
+  view?: string;
+  formula?: string;
+  dateField?: string;
+  redDays?: string;
+  target?: string;
+  targetBlank?: boolean;
+  showDateInfo?: boolean;  // ✅ hinzufügen
+  modal?: boolean;         // ✅ hinzufügen
+  detailUrl?: string;      // ✅ hinzufügen
 };
 
 export const PRESETS: Record<string, KPIConf[]> = {
