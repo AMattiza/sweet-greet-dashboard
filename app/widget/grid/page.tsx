@@ -6,8 +6,9 @@ import GridInner from "./grid-inner";
 function GridPageContent() {
   return (
     <>
+      {/* Child-Script von iFrame Resizer v4.3.9 */}
       <Script
-        src="https://cdn.jsdelivr.net/npm/iframe-resizer/js/iframeResizer.contentWindow.min.js"
+        src="https://cdn.jsdelivr.net/npm/iframe-resizer@4.3.9/js/iframeResizer.contentWindow.min.js"
         strategy="beforeInteractive"
       />
       <GridInner />
