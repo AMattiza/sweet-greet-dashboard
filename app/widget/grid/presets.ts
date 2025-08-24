@@ -1,15 +1,6 @@
 export type KPIConf = {
-  label: string;
-  table: string;
-  view?: string;
-  formula?: string;
-  dateField?: string;
-  redDays?: string;
-  target?: string;
-  targetBlank?: boolean;
-  showDateInfo?: boolean;
-  modal?: boolean;
-  detailUrl?: string;
+  label: string; table: string; view?: string; formula?: string;
+  dateField?: string; redDays?: string; target?: string; targetBlank?: boolean;
 };
 
 export const PRESETS: Record<string, KPIConf[]> = {
@@ -19,38 +10,32 @@ export const PRESETS: Record<string, KPIConf[]> = {
       table: "Aktivitäten",
       formula: "AND({Follow Up Abschluss} = BLANK(), IS_SAME({Follow-up Datum}, TODAY(), 'day'))",
       dateField: "Follow-up Datum",
-      redDays: "0",
-      modal: true,
-      showDateInfo: true,
-      detailUrl: "https://www.suesse-gruesse.online/vertrieb/detail?id={id}"
+      redDays: "1",
+      target: "https://www.suesse-gruesse.online/vertrieb#tab5"
     },
     {
       label: "Verpasste Follow-ups",
       table: "Aktivitäten",
-      formula: "AND({Follow Up Abschluss} = BLANK(), IS_BEFORE({Follow-up Datum}, TODAY()))",
+      formula: "AND(IS_BEFORE({Follow-up Datum}, TODAY()), {Follow Up Abschluss} = BLANK())",
       dateField: "Follow-up Datum",
       redDays: "0",
-      modal: true,
-      showDateInfo: true,
-      detailUrl: "https://www.suesse-gruesse.online/vertrieb/detail?id={id}"
+      target: "https://www.suesse-gruesse.online/vertrieb#tab5"
     },
     {
-      label: "Projektfreigabe",
+      label: "Freigabe für Layouterstellung",
       table: "Projects",
       formula: "{Vertriebsmitarbeiter} = BLANK()",
-      dateField: "LetzteAktualisierung",
+      dateField: "Auftragsdatum",
       redDays: "2",
-      target: "https://www.suesse-gruesse.online/freigabe",
-      showDateInfo: false
+      target: "https://www.suesse-gruesse.online/freigabe"
     },
     {
-      label: "Kartenproduktion",
-      table: "Aufträge",
+      label: "Freigabe für Postkartenproduktion",
+      table: "Projects",
       formula: "AND({Händler Freigaben} != BLANK(), {Freigaben} = BLANK())",
-      dateField: "AngelegtAm",
+      dateField: "Auftragsdatum",
       redDays: "2",
-      target: "https://www.suesse-gruesse.online/freigabe#tab2",
-      showDateInfo: true
+      target: "https://www.suesse-gruesse.online/freigabe#tab2"
     }
   ]
 };
