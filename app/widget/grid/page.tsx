@@ -1,9 +1,16 @@
-"use client";
-import { Suspense } from "react";
+// app/widget/grid/page.tsx
+import Script from "next/script";
 import GridInner from "./grid-inner";
 
-export default function GridPage(){
-  return <Suspense fallback={<div style={{padding:16,fontFamily:'Inter,system-ui'}}>Lade…</div>}>
-    <GridInner/>
-  </Suspense>;
+export default function Page() {
+  return (
+    <>
+      {/* iFrame-Resizer Child-Script: passt Höhe automatisch an */}
+      <Script
+        src="https://cdn.jsdelivr.net/npm/iframe-resizer/js/iframeResizer.contentWindow.min.js"
+        strategy="beforeInteractive"
+      />
+      <GridInner />
+    </>
+  );
 }
