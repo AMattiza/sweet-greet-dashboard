@@ -33,9 +33,8 @@ function Card({conf, data, err, onClick}:{conf:KPIConf; data?:ApiResp; err?:stri
       cursor: conf.modal ? "pointer" : "default",
       display:"flex",
       flexDirection:"column",
-      justifyContent:"center",     // ✅ Inhalt vertikal mittig
-      textAlign:"center",          // ✅ Text auch mittig
-      height:"100%"                // ✅ passt sich Grid-Höhe an
+      justifyContent:"center",
+      textAlign:"center"
     }}>
       <div style={{fontSize:13,opacity:.9,marginBottom:6,fontWeight:500}}>{conf.label}</div>
       <div style={{fontSize:36,fontWeight:700,lineHeight:"40px",marginBottom:6}}>
@@ -45,10 +44,10 @@ function Card({conf, data, err, onClick}:{conf:KPIConf; data?:ApiResp; err?:stri
     </div>
   );
   if(conf.modal && onClick){
-    return <div onClick={onClick} style={{flex:1, height:"100%"}}>{card}</div>;
+    return <div onClick={onClick} style={{flex:1}}>{card}</div>;
   }
   return conf.target 
-    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{textDecoration:"none",flex:1, height:"100%"}}>{card}</a> 
+    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{textDecoration:"none",flex:1}}>{card}</a> 
     : card;
 }
 
@@ -64,20 +63,16 @@ export default function GridInner(){
 
   const makeApiUrl = (conf: KPIConf, extraParams: Record<string,string> = {}) => {
     if(!conf.table) throw new Error("❌ Preset ohne table: " + JSON.stringify(conf));
-
     const base = (typeof window !== "undefined" && window.location && window.location.origin)
       ? window.location.origin
       : "https://sweet-greet-dashboard.vercel.app";
 
     const u = new URL("/api/kpi", base);
-
     if(conf.view) u.searchParams.set("view", conf.view);
     if(conf.formula) u.searchParams.set("formula", conf.formula);
     if(conf.dateField) u.searchParams.set("dateField", conf.dateField);
     if(conf.redDays) u.searchParams.set("redDays", conf.redDays);
-
     Object.entries(extraParams).forEach(([k,v]) => u.searchParams.set(k, v));
-
     u.searchParams.set("table", conf.table);
     return u.toString();
   };
@@ -95,22 +90,17 @@ export default function GridInner(){
       return;
     }
     setItems(confs.map(c=>({conf:c})));
-
     confs.forEach((c,i)=>{
       let url = "";
       try {
         url = makeApiUrl(c);
-        console.log("👉 Fetch-URL für", c.label, ":", url);
       } catch(err) {
-        console.error("❌ Fehler in makeApiUrl für", c.label, ":", err);
         setItems(prev => { const copy=[...prev]; copy[i]={conf:c,err:String(err)}; return copy; });
         return;
       }
-
       fetch(url).then(r=>r.json()).then(data=>{
         setItems(prev => { const copy=[...prev]; copy[i]={conf:c,data}; return copy; });
       }).catch(e=>{
-        console.error("❌ Fetch-Fehler bei", c.label, "URL:", url, "Error:", e);
         setItems(prev => { const copy=[...prev]; copy[i]={conf:c,err:String(e)}; return copy; });
       });
     });
@@ -130,55 +120,23 @@ export default function GridInner(){
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  const openModal = async (conf: KPIConf) => {
-    setModalTitle(conf.label);
-    setDetailUrl(conf.detailUrl || "");
-    const url = makeApiUrl(conf, { list:"1" });
-    console.log("👉 Modal-Fetch für", conf.label, ":", url);
-    const res = await fetch(url);
-    const data = await res.json();
-    setModalItems(data.records || []);
-  };
-
   return (
     <>
       <div style={{
         display:"grid",
         gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))",
         gap:"16px",
-        alignItems:"stretch",     // ✅ gleiche Höhe in der Reihe
-        justifyItems:"center",    // ✅ Widgets mittig
-        minHeight:"100vh",        // ✅ volle Bildschirmhöhe
-        padding:"24px",           // ✅ schöner Innenabstand
+        alignItems:"stretch",
+        justifyItems:"center",
+        padding:"24px",
+        margin:"0 auto",
+        maxWidth:"1200px",
         boxSizing:"border-box"
       }}>
         {items.map((it,idx)=>
-          <Card key={idx} {...it} onClick={() => it.conf.modal && openModal(it.conf)} />
+          <Card key={idx} {...it} onClick={() => it.conf.modal && setModalItems([])} />
         )}
       </div>
-      {modalItems && (
-        <div style={{
-          position:"fixed",top:0,left:0,width:"100%",height:"100%",
-          background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",
-          zIndex:1000
-        }}>
-          <div style={{background:"#fff",padding:24,borderRadius:8,maxWidth:"600px",width:"90%",maxHeight:"80%",overflowY:"auto"}}>
-            <h3>{modalTitle}</h3>
-            <ul>
-              {modalItems.map((r:any,i:number)=>(
-                <li key={i} style={{marginBottom:8}}>
-                  {detailUrl ? (
-                    <a href={detailUrl.replace("{id}", r.id)} target="_blank" rel="noreferrer">
-                      {r.fields?.["Follow-up Datum"] || r.id}
-                    </a>
-                  ) : JSON.stringify(r.fields)}
-                </li>
-              ))}
-            </ul>
-            <button onClick={()=>setModalItems(null)}>Schließen</button>
-          </div>
-        </div>
-      )}
     </>
   );
 }
