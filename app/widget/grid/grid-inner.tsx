@@ -1,5 +1,4 @@
 "use client";
-
 import "./grid.css";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -23,9 +22,8 @@ function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
       {sub && <div className="card-sub">{sub}</div>}
     </div>
   );
-
   return conf.target
-    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{ textDecoration: "none" }}>{card}</a>
+    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{ textDecoration:"none" }}>{card}</a>
     : card;
 }
 
@@ -35,7 +33,6 @@ export default function GridInner() {
   const presetKey = sp.get("preset") || "vertrieb";
 
   const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
-
   const confs = useMemo<KPIConf[]>(() => {
     if (b64) {
       try {
@@ -52,7 +49,6 @@ export default function GridInner() {
       return;
     }
     setItems(confs.map((c) => ({ conf: c })));
-
     confs.forEach((c, i) => {
       const u = new URL("/api/kpi", window.location.origin);
       u.searchParams.set("table", c.table);
@@ -60,29 +56,19 @@ export default function GridInner() {
       if (c.formula) u.searchParams.set("formula", c.formula);
       if (c.dateField) u.searchParams.set("dateField", c.dateField);
       if (c.redDays) u.searchParams.set("redDays", c.redDays);
-
       fetch(u.toString())
         .then((r) => r.json())
-        .then((data: ApiResp) => {
-          setItems((prev) => {
-            const copy = [...prev];
-            copy[i] = { conf: c, data };
-            return copy;
-          });
-        })
-        .catch((e) => {
-          setItems((prev) => {
-            const copy = [...prev];
-            copy[i] = { conf: c, err: String(e) };
-            return copy;
-          });
-        });
+        .then((data: ApiResp) => setItems(prev => (prev.map((p,idx)=> idx===i? {conf:c,data}:p))))
+        .catch((e) => setItems(prev => (prev.map((p,idx)=> idx===i? {conf:c,err:String(e)}:p))));
     });
   }, [confs]);
 
   return (
-    <div className="grid-container">
-      {items.map((it, idx) => <Card key={idx} {...it} />)}
+    {/*  ⬇️  Genau dieses Element wird vom Parent gemessen */}
+    <div id="kpi-root" data-iframe-size data-iframe-height>
+      <div className="grid-container">
+        {items.map((it, idx) => <Card key={idx} {...it} />)}
+      </div>
     </div>
   );
 }
