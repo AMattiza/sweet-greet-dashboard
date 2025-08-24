@@ -1,65 +1,35 @@
-import { NextRequest, NextResponse } from "next/server";
-import { listRecords } from "../../../lib/airtable";
+import { NextResponse } from "next/server";
+import Airtable from "airtable";
 
-function cors(req: NextRequest) {
-  const origin = req.headers.get("origin") || "";
-  const allow = (process.env.ALLOWED_ORIGINS || "")
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean);
-  const allowed = !allow.length || allow.some(p =>
-    p.startsWith("https://*.") ? origin.endsWith(p.replace("*.","")) : origin === p
-  );
-  return {
-    "Access-Control-Allow-Origin": allowed ? origin : "null",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
-  };
-}
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID!);
 
-export async function OPTIONS(req: NextRequest) {
-  return new NextResponse(null, { headers: cors(req) });
-}
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const table = searchParams.get("table")!;
+  const view = searchParams.get("view") || undefined;
+  const formula = searchParams.get("formula") || undefined;
+  const dateField = searchParams.get("dateField") || undefined;
+  const redDays = parseInt(searchParams.get("redDays")||"0");
+  const list = searchParams.get("list");
 
-/** 
- * Query:
- *  table (required)
- *  view
- *  formula
- *  dateField (default: 'Created')
- *  redDays  (default: 3)
- * Returns: { count, maxAgeDays, status }
- */
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const table = searchParams.get("table");
-    if (!table) return NextResponse.json({ error: "Missing table" }, { status: 400 });
+  const recs = await base(table).select({ view, filterByFormula: formula }).all();
 
-    const baseId = process.env.AIRTABLE_BASE_ID!;
-    const view = searchParams.get("view") || undefined;
-    const formula = searchParams.get("formula") || undefined;
-    const dateField = searchParams.get("dateField") || "Created";
-    const redDays = Number(searchParams.get("redDays") || 3);
-
-    const recs = await listRecords({ baseId, table, view, filterByFormula: formula, fields: [dateField] });
-
-    const now = Date.now();
-    const ages = recs.map(r => {
-      const d = r.fields[dateField] ? new Date(r.fields[dateField]).getTime() : new Date(r.createdTime).getTime();
-      return Math.max(0, Math.floor((now - d) / 86400000));
-    });
-    const maxAgeDays = ages.length ? Math.max(...ages) : 0;
-
-    let status: "green" | "amber" | "red" = "green";
-    if (recs.length === 0) status = "green";
-    else if (maxAgeDays >= redDays) status = "red";
-    else status = "amber";
-
-    return new NextResponse(JSON.stringify({ count: recs.length, maxAgeDays, status }), {
-      headers: { "Content-Type": "application/json", ...cors(req) }
-    });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Unknown error" }, { status: 500 });
+  const count = recs.length;
+  let maxAgeDays = 0;
+  if(dateField){
+    const dates = recs.map(r => r.get(dateField) ? new Date(r.get(dateField) as string) : null).filter(Boolean) as Date[];
+    if(dates.length){
+      const diffs = dates.map(d => Math.floor((Date.now() - d.getTime())/86400000));
+      maxAgeDays = Math.max(...diffs);
+    }
   }
+
+  let status:"green"|"amber"|"red" = "amber";
+  if(count===0) status="green";
+  else if(maxAgeDays>redDays) status="red";
+
+  if(list){
+    return NextResponse.json({ count, maxAgeDays, status, records: recs.map(r => ({id:r.id, fields:r.fields})) });
+  }
+  return NextResponse.json({ count, maxAgeDays, status });
 }
