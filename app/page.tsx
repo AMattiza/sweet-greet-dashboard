@@ -1,3 +1,16 @@
+import Script from "next/script";
+
+export default function Page() {
+  return (
+    <>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/iframe-resizer/js/iframeResizer.contentWindow.min.js"
+        strategy="beforeInteractive"
+      />
+      {/* Hier kommt dein Grid-Layout */}
+    </>
+  );
+}
 export default function Home() {
   return (
     <main style={{fontFamily:'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif', padding:24}}>
