@@ -48,18 +48,22 @@ export default function GridInner(){
   const [modalTitle, setModalTitle] = useState<string>("");
   const [detailUrl, setDetailUrl] = useState<string>("");
 
-  // Hilfsfunktion für sichere URL-Erstellung
+  // Hilfsfunktion für sichere URL-Erstellung (mit Encoding)
   const makeApiUrl = (conf: KPIConf, extraParams: Record<string,string> = {}) => {
     const base = (typeof window !== "undefined" && window.location && window.location.origin)
       ? window.location.origin
-      : "https://sweet-greet-dashboard.vercel.app"; // Fallback: deine Vercel-URL
+      : "https://sweet-greet-dashboard.vercel.app"; // Fallback
+
     const u = new URL("/api/kpi", base);
-    if(conf.view) u.searchParams.set("view", conf.view);
-    if(conf.formula) u.searchParams.set("formula", conf.formula);
-    if(conf.dateField) u.searchParams.set("dateField", conf.dateField);
+
+    if(conf.view) u.searchParams.set("view", encodeURIComponent(conf.view));
+    if(conf.formula) u.searchParams.set("formula", encodeURIComponent(conf.formula));
+    if(conf.dateField) u.searchParams.set("dateField", encodeURIComponent(conf.dateField));
     if(conf.redDays) u.searchParams.set("redDays", conf.redDays);
+
     Object.entries(extraParams).forEach(([k,v]) => u.searchParams.set(k,v));
-    u.searchParams.set("table", conf.table);
+
+    u.searchParams.set("table", encodeURIComponent(conf.table));
     return u.toString();
   };
 
