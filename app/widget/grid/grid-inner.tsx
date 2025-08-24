@@ -2,7 +2,7 @@
 import "./grid.css";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { KPIConf } from "../api/widgets/types";
+import { KPIConf } from "../../api/widgets/types";
 
 type ApiResp = { count: number; maxAgeDays: number; status: "green"|"amber"|"red" };
 
