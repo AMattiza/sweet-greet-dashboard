@@ -1,9 +1,9 @@
 "use client";
 import "./grid.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-export type KPIConf = {
+type KPIConf = {
   label: string;
   table: string;
   view?: string;
@@ -13,23 +13,29 @@ export type KPIConf = {
   target?: string;
   targetBlank?: boolean;
   showDateInfo?: boolean;
-  modal?: boolean;
-  detailUrl?: string;
-  bereich?: string;        // z.B. "vertrieb", "logistik", "projekte"
-  filterField?: string;    // Feldname für Personalisierung
-  personen?: string[];     // Personen, für die das Widget relevant ist
+  bereich?: string;
+  filterField?: string;
+  personen?: string[];
 };
 
-type ApiResp = { count: number; maxAgeDays: number; status: "green"|"amber"|"red" };
+type ApiResp = { count: number; maxAgeDays: number; status: "green" | "amber" | "red" };
 
-function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
+function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const color = err ? "red" : data?.status || "amber";
-  const bg = color==="green" ? "#9EB384" : color==="red" ? "#E57373" : "#FFD54F";
-  const sub = err ? err : !data ? "Lade..." :
-    conf.showDateInfo===false ? "" :
-    data.status==="green" ? "Alles erledigt" :
-    data.status==="red" ? `Älteste offen: ${data.maxAgeDays} Tage` :
-    `Offene: bis ${data.maxAgeDays} Tage`;
+  const bg =
+    color === "green" ? "#9EB384" : color === "red" ? "#E57373" : "#FFD54F";
+
+  const sub = err
+    ? err
+    : !data
+    ? "Lade..."
+    : conf.showDateInfo === false
+    ? ""
+    : data.status === "green"
+    ? "Alles erledigt"
+    : data.status === "red"
+    ? `Älteste offen: ${data.maxAgeDays} Tage`
+    : `Offene: bis ${data.maxAgeDays} Tage`;
 
   const card = (
     <div className="card" style={{ background: bg, color: "#fff" }}>
@@ -39,70 +45,73 @@ function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
     </div>
   );
 
-  return conf.target
-    ? <a href={conf.target} target={conf.targetBlank===false?"_self":"_blank"} rel="noreferrer" style={{ textDecoration:"none" }}>{card}</a>
-    : card;
+  return conf.target ? (
+    <a
+      href={conf.target}
+      target={conf.targetBlank === false ? "_self" : "_blank"}
+      rel="noreferrer"
+      style={{ textDecoration: "none" }}
+    >
+      {card}
+    </a>
+  ) : (
+    card
+  );
 }
 
 export default function GridInner() {
   const sp = useSearchParams();
-  const b64 = sp.get("config");
-  const presetKey = sp.get("preset") || "vertrieb";
+  const preset = sp.get("preset") || "vertrieb";
 
-  const [allWidgets, setAllWidgets] = useState<KPIConf[]>([]);
   const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
 
-  // 1. Widgets aus API laden
   useEffect(() => {
-    fetch("/api/widgets")
+    // 1. Widgets aus Airtable holen
+    fetch(`/api/widgets?preset=${preset}`)
       .then((r) => r.json())
-      .then((res) => setAllWidgets(res.widgets || []))
-      .catch((e) => console.error("⚠️ Widgets laden fehlgeschlagen:", e));
-  }, []);
+      .then((widgets: KPIConf[]) => {
+        if (!widgets.length) {
+          setItems([{ conf: { label: "Keine Widgets gefunden", table: "—" }, err: "Preset leer oder falsch" }]);
+          return;
+        }
 
-  // 2. Widgets auswählen (Preset oder config)
-  const confs = useMemo<KPIConf[]>(() => {
-    if (b64) {
-      try {
-        const parsed = JSON.parse(atob(b64)) as KPIConf[];
-        if (Array.isArray(parsed) && parsed.length) return parsed;
-      } catch {}
-    }
-    return allWidgets.filter((w) => w.bereich === presetKey);
-  }, [b64, presetKey, allWidgets]);
+        // Leere Items vorinitialisieren
+        setItems(widgets.map((c) => ({ conf: c })));
 
-  // 3. API-Requests für jedes Widget starten
-  useEffect(() => {
-    if (!confs.length) {
-      setItems([{ conf: { label: "Config fehlt", table: "—" }, err: "config oder preset ungültig" }]);
-      return;
-    }
+        // 2. Für jedes Widget API /api/kpi aufrufen
+        widgets.forEach((c, i) => {
+          const u = new URL("/api/kpi", window.location.origin);
+          u.searchParams.set("table", c.table);
+          if (c.view) u.searchParams.set("view", c.view);
+          if (c.formula) u.searchParams.set("formula", c.formula);
+          if (c.dateField) u.searchParams.set("dateField", c.dateField);
+          if (c.redDays) u.searchParams.set("redDays", c.redDays);
 
-    setItems(confs.map((c) => ({ conf: c })));
-
-    confs.forEach((c, i) => {
-      const u = new URL("/api/kpi", window.location.origin);
-      u.searchParams.set("table", c.table);
-      if (c.view) u.searchParams.set("view", c.view);
-      if (c.formula) u.searchParams.set("formula", c.formula);
-      if (c.dateField) u.searchParams.set("dateField", c.dateField);
-      if (c.redDays) u.searchParams.set("redDays", c.redDays);
-
-      fetch(u.toString())
-        .then((r) => r.json())
-        .then((data: ApiResp) =>
-          setItems(prev => prev.map((p,idx)=> idx===i? {conf:c,data}:p))
-        )
-        .catch((e) =>
-          setItems(prev => prev.map((p,idx)=> idx===i? {conf:c,err:String(e)}:p))
-        );
-    });
-  }, [confs]);
+          fetch(u.toString())
+            .then((r) => r.json())
+            .then((data: ApiResp) =>
+              setItems((prev) =>
+                prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
+              )
+            )
+            .catch((e) =>
+              setItems((prev) =>
+                prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p))
+              )
+            );
+        });
+      })
+      .catch((e) => {
+        setItems([{ conf: { label: "Widgets-API Fehler", table: "—" }, err: String(e) }]);
+      });
+  }, [preset]);
 
   return (
     <div id="kpi-root" data-iframe-height>
       <div className="grid-container">
-        {items.map((it, idx) => <Card key={idx} {...it} />)}
+        {items.map((it, idx) => (
+          <Card key={idx} {...it} />
+        ))}
       </div>
     </div>
   );
