@@ -1,41 +1,9 @@
-/* verhindert künstliche Zusatzhöhe */
-:root, html, body { margin: 0; padding: 0; }
-
-/* responsives Grid */
+html, body { margin:0; padding:0; }
 .grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 16px;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
+  gap:16px; padding:16px; box-sizing:border-box; width:100%;
 }
-
-/* Karten */
-.card {
-  border-radius: 12px;
-  padding: 18px;
-  min-width: 220px;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-  text-align: center;
-}
-
-.card-title {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  opacity: .95;
-}
-
-.card-value {
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 40px;
-  margin-bottom: 6px;
-}
-
-.card-sub {
-  font-size: 12px;
-  opacity: .9;
-}
+.card { border-radius:12px; padding:18px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+.card-title { font-size:14px; font-weight:600; margin-bottom:6px; }
+.card-value { font-size:32px; font-weight:700; line-height:40px; }
