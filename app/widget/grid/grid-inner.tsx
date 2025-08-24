@@ -25,34 +25,17 @@ function Card({conf, data, err}:{conf:KPIConf; data?:ApiResp; err?:string}) {
           : `Offene: bis ${data.maxAgeDays} Tage`;
 
   const card = (
-    <div style={{
-      fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-      borderRadius: 12,
-      padding: 18,
-      minWidth: 220,
-      flex: 1,
-      background: bg,
-      border: "1px solid rgba(0,0,0,0.08)",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
-      color: "#fff",
-      margin: 8,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      textAlign: "center"
-    }}>
-      <div style={{ fontSize: 14, marginBottom: 8, fontWeight: 600 }}>{conf.label}</div>
-      <div style={{ fontSize: 32, fontWeight: 700, lineHeight: "40px", marginBottom: 6 }}>
-        {err ? "!" : data ? data.count : "…"}
-      </div>
+    <div className="card">
+      <div className="card-title">{conf.label}</div>
+      <div className="card-value">{err ? "!" : data ? data.count : "…"}</div>
       {conf.showDateInfo !== false && (
-        <div style={{ fontSize: 13, opacity: .9 }}>{sub}</div>
+        <div className="card-sub">{sub}</div>
       )}
     </div>
   );
 
   return conf.target
-    ? <a href={conf.target} target={conf.targetBlank===false ? "_self" : "_blank"} rel="noreferrer" style={{ textDecoration: "none", flex: 1 }}>{card}</a>
+    ? <a href={conf.target} target={conf.targetBlank===false ? "_self" : "_blank"} rel="noreferrer" style={{textDecoration:"none"}}>{card}</a>
     : card;
 }
 
@@ -95,7 +78,7 @@ export default function GridInner() {
     });
   },[b64,preset]);
 
-  // 🔥 Auto-Resize: sorgt dafür, dass Softr den iFrame immer korrekt hochzieht
+  // iFrame-Autoresize
   useEffect(() => {
     const resize = () => {
       const h = document.body.scrollHeight;
@@ -112,14 +95,7 @@ export default function GridInner() {
   }, []);
 
   return (
-    <div style={{
-      display:"flex",
-      flexWrap:"wrap",
-      justifyContent:"center",
-      alignItems:"stretch",
-      gap:"16px",
-      padding:"8px"
-    }}>
+    <div className="grid-container">
       {items.map((it,idx)=><Card key={idx} {...it}/>)}
     </div>
   );
