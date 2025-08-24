@@ -2,7 +2,22 @@
 import "./grid.css";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { PRESETS, KPIConf } from "./presets";
+export type KPIConf = {
+  label: string;
+  table: string;
+  view?: string;
+  formula?: string;
+  dateField?: string;
+  redDays?: string;
+  target?: string;
+  targetBlank?: boolean;
+  showDateInfo?: boolean;
+  modal?: boolean;
+  detailUrl?: string;
+  bereich?: string;
+  filterField?: string;
+  personen?: string[];
+};
 
 type ApiResp = { count: number; maxAgeDays: number; status: "green"|"amber"|"red" };
 
