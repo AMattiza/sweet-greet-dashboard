@@ -95,6 +95,17 @@ export default function GridInner() {
     });
   },[b64,preset]);
 
+  // ✅ Iframe-Höhe sauber anpassen
+  useEffect(() => {
+    const resize = () => {
+      const h = document.body.scrollHeight;
+      window.parent.postMessage({ type: "resize-iframe", height: h }, "*");
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
   return (
     <div className="kpi-grid">
       {items.map((it,idx)=>
