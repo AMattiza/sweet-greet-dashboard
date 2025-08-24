@@ -111,7 +111,7 @@ export const ALL_WIDGETS: KPIConf[] = [
     label: "Kartenlizenzen vergeben",
     table: "Postkarten",
     formula: "AND({Postkarten-Status}='FREIGABE', {Kartennummer}=BLANK())",
-    dateField: "Auftragsdatum (aus Projects)",
+    dateField: "Freigabedatum  (from Vorgang ID) (aus Freigaben)",
     redDays: "0",
     target: "https://www.suesse-gruesse.online/produktion",
     bereich: "projekte"
