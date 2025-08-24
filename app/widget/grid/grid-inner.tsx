@@ -48,6 +48,21 @@ export default function GridInner(){
   const [modalTitle, setModalTitle] = useState<string>("");
   const [detailUrl, setDetailUrl] = useState<string>("");
 
+  // Hilfsfunktion für sichere URL-Erstellung
+  const makeApiUrl = (conf: KPIConf, extraParams: Record<string,string> = {}) => {
+    const base = (typeof window !== "undefined" && window.location && window.location.origin)
+      ? window.location.origin
+      : "https://sweet-greet-dashboard.vercel.app"; // Fallback: deine Vercel-URL
+    const u = new URL("/api/kpi", base);
+    if(conf.view) u.searchParams.set("view", conf.view);
+    if(conf.formula) u.searchParams.set("formula", conf.formula);
+    if(conf.dateField) u.searchParams.set("dateField", conf.dateField);
+    if(conf.redDays) u.searchParams.set("redDays", conf.redDays);
+    Object.entries(extraParams).forEach(([k,v]) => u.searchParams.set(k,v));
+    u.searchParams.set("table", conf.table);
+    return u.toString();
+  };
+
   useEffect(()=>{
     let confs: KPIConf[] | null = null;
     if (b64) {
@@ -62,13 +77,8 @@ export default function GridInner(){
     }
     setItems(confs.map(c=>({conf:c})));
     confs.forEach((c,i)=>{
-      const u = new URL(window.location.origin + "/api/kpi");
-      u.searchParams.set("table", c.table);
-      if(c.view) u.searchParams.set("view", c.view);
-      if(c.formula) u.searchParams.set("formula", c.formula);
-      if(c.dateField) u.searchParams.set("dateField", c.dateField);
-      if(c.redDays) u.searchParams.set("redDays", c.redDays);
-      fetch(u.toString()).then(r=>r.json()).then(data=>{
+      const url = makeApiUrl(c);
+      fetch(url).then(r=>r.json()).then(data=>{
         setItems(prev => { const copy=[...prev]; copy[i]={conf:c,data}; return copy; });
       }).catch(e=>{
         setItems(prev => { const copy=[...prev]; copy[i]={conf:c,err:String(e)}; return copy; });
@@ -93,14 +103,8 @@ export default function GridInner(){
   const openModal = async (conf: KPIConf) => {
     setModalTitle(conf.label);
     setDetailUrl(conf.detailUrl || "");
-    const u = new URL(window.location.origin + "/api/kpi");
-    u.searchParams.set("table", conf.table);
-    if(conf.view) u.searchParams.set("view", conf.view);
-    if(conf.formula) u.searchParams.set("formula", conf.formula);
-    if(conf.dateField) u.searchParams.set("dateField", conf.dateField);
-    if(conf.redDays) u.searchParams.set("redDays", conf.redDays);
-    u.searchParams.set("list","1");
-    const res = await fetch(u.toString());
+    const url = makeApiUrl(conf, { list:"1" });
+    const res = await fetch(url);
     const data = await res.json();
     setModalItems(data.records || []);
   };
