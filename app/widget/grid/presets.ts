@@ -7,44 +7,41 @@ export type KPIConf = {
   redDays?: string;
   target?: string;
   targetBlank?: boolean;
-  showDateInfo?: boolean;  // ✅ hinzufügen
-  modal?: boolean;         // ✅ hinzufügen
-  detailUrl?: string;      // ✅ hinzufügen
+  showDateInfo?: boolean;
+  modal?: boolean;
+  detailUrl?: string;
+
+  // Organisation
+  bereich?: string;        // z.B. "vertrieb", "logistik", "projekte"
+  filterField?: string;    // Feldname für Personalisierung (z.B. "Vertriebsmitarbeiter")
+  personen?: string[];     // Personen, für die dieses Widget relevant ist
 };
 
+import { ALL_WIDGETS } from "./widgets";
+
+/**
+ * Baut ein Personen-Preset, indem es Widgets filtert,
+ * die die Person unterstützen, und die Formel anpasst.
+ */
+function buildPersonPreset(name: string): KPIConf[] {
+  return ALL_WIDGETS
+    .filter(w => w.personen?.includes(name))
+    .map(w => ({
+      ...w,
+      formula: w.filterField
+        ? `AND({${w.filterField}}='${name}', ${w.formula})`
+        : w.formula
+    }));
+}
+
 export const PRESETS: Record<string, KPIConf[]> = {
-  "vertrieb": [
-    {
-      label: "Follow-up Termine heute",
-      table: "Aktivitäten",
-      formula: "AND({Follow Up Abschluss} = BLANK(), IS_SAME({Follow-up Datum}, TODAY(), 'day'))",
-      dateField: "Follow-up Datum",
-      redDays: "1",
-      target: "https://www.suesse-gruesse.online/vertrieb#tab5"
-    },
-    {
-      label: "Verpasste Follow-ups",
-      table: "Aktivitäten",
-      formula: "AND(IS_BEFORE({Follow-up Datum}, TODAY()), {Follow Up Abschluss} = BLANK())",
-      dateField: "Follow-up Datum",
-      redDays: "0",
-      target: "https://www.suesse-gruesse.online/vertrieb#tab5"
-    },
-    {
-      label: "Freigabe für Layouterstellung",
-      table: "Projects",
-      formula: "{Vertriebsmitarbeiter} = BLANK()",
-      dateField: "Auftragsdatum",
-      redDays: "2",
-      target: "https://www.suesse-gruesse.online/freigabe"
-    },
-    {
-      label: "Freigabe für Postkartenproduktion",
-      table: "Projects",
-      formula: "AND({Händler Freigaben} != BLANK(), {Freigaben} = BLANK())",
-      dateField: "Auftragsdatum",
-      redDays: "2",
-      target: "https://www.suesse-gruesse.online/freigabe#tab2"
-    }
-  ]
+  // Bereichs-Presets
+  vertrieb: ALL_WIDGETS.filter(w => w.bereich === "vertrieb"),
+  freigaben: ALL_WIDGETS.filter(w => w.bereich === "freigaben"),
+  projekte: ALL_WIDGETS.filter(w => w.bereich === "projekte"),
+  logistik: ALL_WIDGETS.filter(w => w.bereich === "logistik"),
+
+  // Personen-Presets
+  rafael: buildPersonPreset("Rafael Michen"),
+  patrick: buildPersonPreset("Patrick Lillpopp"),
 };
