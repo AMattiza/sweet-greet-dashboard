@@ -15,4 +15,7 @@ export type KPIConf = {
   bereich?: string;        // z.B. "vertrieb", "logistik", "projekte"
   filterField?: string;    // Feldname für Personalisierung (z.B. "Vertriebsmitarbeiter")
   personen?: string[];     // Personen, für die dieses Widget relevant ist
+
+  // Neu: Wert direkt aus Feld holen
+  field?: string;
 };
