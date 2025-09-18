@@ -25,6 +25,7 @@ type ApiResp = {
   count: number;
   maxAgeDays: number;
   status: "green" | "amber" | "red";
+  value?: string | number | null; // NEU
 };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
