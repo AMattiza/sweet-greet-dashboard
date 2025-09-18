@@ -1,6 +1,6 @@
 "use client";
 import "./grid.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type KPIConf = {
@@ -25,7 +25,7 @@ type ApiResp = {
   count: number;
   maxAgeDays: number;
   status: "green" | "amber" | "red";
-  value?: string | number | null; // NEU
+  value?: string | number | null; // 👉 NEU: Feldwert vom Backend
 };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
@@ -113,10 +113,17 @@ export default function GridInner() {
       if (c.dateField) u.searchParams.set("dateField", c.dateField);
       if (c.redDays) u.searchParams.set("redDays", String(c.redDays));
 
+      // 👉 Falls Widget ein Feld direkt anfordert
+      if ((c as any).field) u.searchParams.set("field", (c as any).field);
+
       fetch(u.toString())
         .then((r) => r.json())
-        .then((data: ApiResp) => setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, data } : p))))
-        .catch((e) => setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p))));
+        .then((data: ApiResp) =>
+          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, data } : p)))
+        )
+        .catch((e) =>
+          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p)))
+        );
     });
   }, [confs]);
 
