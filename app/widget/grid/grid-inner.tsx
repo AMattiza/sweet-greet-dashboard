@@ -28,15 +28,14 @@ type ApiResp = {
 };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
-  // Für "Nur zählen" -> neutrale Optik
   const simpleMode = conf.logicType === "Nur zählen";
 
-  let bg = "#FFD54F"; // Standard amber
+  let bg = "#FFD54F";
   if (!simpleMode) {
     const color = err ? "red" : data?.status || "amber";
     bg = color === "green" ? "#9EB384" : color === "red" ? "#E57373" : "#FFD54F";
   } else {
-    bg = "#f4f4f4"; // neutral grau
+    bg = "#f4f4f4";
   }
 
   const sub = err
@@ -54,15 +53,11 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     : `Offene: bis ${data.maxAgeDays} Tage`;
 
   const card = (
-    <div
-      className="card"
-      style={{
-        background: bg,
-        color: simpleMode ? "#333" : "#fff",
-      }}
-    >
+    <div className="card" style={{ background: bg, color: simpleMode ? "#333" : "#fff" }}>
       <div className="card-title">{conf.label}</div>
-      <div className="card-value">{err ? "!" : data ? data.count : "…"}</div>
+      <div className="card-value">
+        {err ? "!" : data ? (data.value ?? data.count) : "…"}
+      </div>
       {sub && <div className="card-sub">{sub}</div>}
     </div>
   );
