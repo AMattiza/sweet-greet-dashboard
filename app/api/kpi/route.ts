@@ -18,33 +18,23 @@ export async function GET(req: Request) {
     const redDays = parseInt(searchParams.get("redDays") || "0");
     const list = searchParams.get("list");
 
-    // 👉 NEU: optionales Feld, das direkt zurückgegeben werden soll
+    // NEU: optionales Feld
     const field = searchParams.get("field") || undefined;
 
     console.log("📊 KPI-Request:", { table, view, formula, dateField, redDays, list, field });
 
-    // 👉 Debug-Ausgabe: Welche Query geht an Airtable?
-    console.log("👉 Airtable Query Params:", {
-      baseId: process.env.AIRTABLE_BASE_ID!,
-      table,
-      view,
-      formula,
-      field,
-    });
-
-    // Airtable Records laden über Wrapper
+    // Airtable Records laden
     const recs = await listRecords({
       baseId: process.env.AIRTABLE_BASE_ID!,
       table,
       view,
       filterByFormula: formula,
-      fields: field ? [field] : undefined, // falls field gesetzt ist, nur dieses Feld laden
+      fields: field ? [field] : undefined, // falls field gesetzt ist
     });
 
     console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
 
     if (list) {
-      console.log("🔍 Detail-List-Modus aktiv → gebe alle Records zurück");
       return NextResponse.json({ records: recs });
     }
 
@@ -58,15 +48,11 @@ export async function GET(req: Request) {
         const dVal = rec.fields[dateField];
         if (dVal) {
           const d = new Date(dVal as string);
-          const diff = Math.floor(
-            (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)
-          );
+          const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
           if (diff > maxAgeDays) maxAgeDays = diff;
         }
       }
     }
-
-    console.log(`📈 Ergebnis: count=${count}, maxAgeDays=${maxAgeDays}, redDays=${redDays}`);
 
     let status: "green" | "amber" | "red" = "amber";
     if (count === 0) {
@@ -75,14 +61,20 @@ export async function GET(req: Request) {
       status = "red";
     }
 
-    console.log(`🎨 Status für "${table}": ${status}`);
-
-    // 👉 NEU: Feldwert extrahieren (falls vorhanden)
+    // Feldwert extrahieren
     let value: string | number | null = null;
     if (field && recs.length > 0) {
-      const raw = recs[0].fields[field];
-      if (raw !== undefined && raw !== null) {
-        value = typeof raw === "number" ? raw : String(raw);
+      // hier ggf. Summe aller Records statt nur recs[0]
+      const values = recs
+        .map(r => r.fields[field])
+        .filter(v => v !== undefined && v !== null);
+
+      if (values.length > 0) {
+        if (typeof values[0] === "number") {
+          value = values.reduce((a, b) => a + (b as number), 0);
+        } else {
+          value = String(values[0]); // nur den ersten nehmen
+        }
       }
     }
 
