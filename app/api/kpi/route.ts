@@ -18,7 +18,10 @@ export async function GET(req: Request) {
     const redDays = parseInt(searchParams.get("redDays") || "0");
     const list = searchParams.get("list");
 
-    console.log("📊 KPI-Request:", { table, view, formula, dateField, redDays, list });
+    // 👉 NEU: optionales Feld, das direkt zurückgegeben werden soll
+    const field = searchParams.get("field") || undefined;
+
+    console.log("📊 KPI-Request:", { table, view, formula, dateField, redDays, list, field });
 
     // 👉 Debug-Ausgabe: Welche Query geht an Airtable?
     console.log("👉 Airtable Query Params:", {
@@ -26,6 +29,7 @@ export async function GET(req: Request) {
       table,
       view,
       formula,
+      field,
     });
 
     // Airtable Records laden über Wrapper
@@ -34,6 +38,7 @@ export async function GET(req: Request) {
       table,
       view,
       filterByFormula: formula,
+      fields: field ? [field] : undefined, // falls field gesetzt ist, nur dieses Feld laden
     });
 
     console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
@@ -61,9 +66,7 @@ export async function GET(req: Request) {
       }
     }
 
-    console.log(
-      `📈 Ergebnis: count=${count}, maxAgeDays=${maxAgeDays}, redDays=${redDays}`
-    );
+    console.log(`📈 Ergebnis: count=${count}, maxAgeDays=${maxAgeDays}, redDays=${redDays}`);
 
     let status: "green" | "amber" | "red" = "amber";
     if (count === 0) {
@@ -74,7 +77,16 @@ export async function GET(req: Request) {
 
     console.log(`🎨 Status für "${table}": ${status}`);
 
-    return NextResponse.json({ count, maxAgeDays, status });
+    // 👉 NEU: Feldwert extrahieren (falls vorhanden)
+    let value: string | number | null = null;
+    if (field && recs.length > 0) {
+      const raw = recs[0].fields[field];
+      if (raw !== undefined && raw !== null) {
+        value = typeof raw === "number" ? raw : String(raw);
+      }
+    }
+
+    return NextResponse.json({ count, maxAgeDays, status, value });
   } catch (err: any) {
     console.error("❌ API-Fehler:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
