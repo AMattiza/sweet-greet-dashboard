@@ -18,10 +18,20 @@ export async function GET(req: Request) {
     const redDays = parseInt(searchParams.get("redDays") || "0");
     const list = searchParams.get("list");
 
-    // NEU: optionales Feld
+    // NEU: optionales Feld + Aggregation
     const field = searchParams.get("field") || undefined;
+    const aggregate = searchParams.get("aggregate") || "first"; // first | sum | avg
 
-    console.log("📊 KPI-Request:", { table, view, formula, dateField, redDays, list, field });
+    console.log("📊 KPI-Request:", {
+      table,
+      view,
+      formula,
+      dateField,
+      redDays,
+      list,
+      field,
+      aggregate,
+    });
 
     // Airtable Records laden
     const recs = await listRecords({
@@ -29,7 +39,7 @@ export async function GET(req: Request) {
       table,
       view,
       filterByFormula: formula,
-      fields: field ? [field] : undefined, // falls field gesetzt ist
+      fields: field ? [field] : undefined,
     });
 
     console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
@@ -48,7 +58,9 @@ export async function GET(req: Request) {
         const dVal = rec.fields[dateField];
         if (dVal) {
           const d = new Date(dVal as string);
-          const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          const diff = Math.floor(
+            (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)
+          );
           if (diff > maxAgeDays) maxAgeDays = diff;
         }
       }
@@ -64,16 +76,27 @@ export async function GET(req: Request) {
     // Feldwert extrahieren
     let value: string | number | null = null;
     if (field && recs.length > 0) {
-      // hier ggf. Summe aller Records statt nur recs[0]
       const values = recs
-        .map(r => r.fields[field])
-        .filter(v => v !== undefined && v !== null);
+        .map((r) => r.fields[field])
+        .filter((v) => v !== undefined && v !== null);
 
       if (values.length > 0) {
-        if (typeof values[0] === "number") {
-          value = values.reduce((a, b) => a + (b as number), 0);
+        if (aggregate === "sum") {
+          value = values.reduce(
+            (sum, v) => sum + (typeof v === "number" ? v : 0),
+            0
+          );
+        } else if (aggregate === "avg") {
+          const nums = values.filter(
+            (v) => typeof v === "number"
+          ) as number[];
+          value = nums.length
+            ? nums.reduce((a, b) => a + b, 0) / nums.length
+            : 0;
         } else {
-          value = String(values[0]); // nur den ersten nehmen
+          // Standard: first
+          value =
+            typeof values[0] === "number" ? values[0] : String(values[0]);
         }
       }
     }
