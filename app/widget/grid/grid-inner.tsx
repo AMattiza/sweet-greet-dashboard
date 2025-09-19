@@ -53,12 +53,19 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? `Älteste offen: ${data.maxAgeDays} Tage`
     : `Offene: bis ${data.maxAgeDays} Tage`;
 
+  // 👉 Hier Währungsformatierung einbauen
+  let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
+
+  if (!err && data && data.value !== undefined && data.value !== null) {
+    if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
+      valueDisplay = `€${data.value.toFixed(2)}`;
+    }
+  }
+
   const card = (
     <div className="card" style={{ background: bg, color: simpleMode ? "#333" : "#fff" }}>
       <div className="card-title">{conf.label}</div>
-      <div className="card-value">
-        {err ? "!" : data ? (data.value ?? data.count) : "…"}
-      </div>
+      <div className="card-value">{valueDisplay}</div>
       {sub && <div className="card-sub">{sub}</div>}
     </div>
   );
