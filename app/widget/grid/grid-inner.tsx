@@ -75,7 +75,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     if (conf.statusLogic === "pipeline" && leadTarget && leadThreshold) {
       if (data.count < leadTarget) {
         const diff = leadTarget - data.count;
-        sub = `Dir fehlen nur noch ${diff} bis zum Ziel von ${leadTarget}`;
+        sub = `Noch ${diff} bis zum Ziel von ${leadTarget} Leads`;
       } else {
         sub = `Ziel von ${leadTarget} erreicht`;
       }
