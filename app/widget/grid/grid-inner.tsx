@@ -42,7 +42,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     bg = "#f4f4f4"; // Simple Mode immer hellgrau
   }
 
-  const sub = err
+ const sub = err
   ? err
   : !data
   ? "Lade..."
@@ -50,7 +50,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
   ? ""
   : simpleMode
   ? ""
-  : conf.logicType === "pipeline"
+  : conf.statusLogic === "pipeline" // 👉 statt logicType
   ? (data.count === 0 ? "Keine Leads" : `${data.count} Leads vorhanden`)
   : data.status === "green"
   ? "Alles erledigt"
