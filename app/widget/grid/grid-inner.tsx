@@ -43,8 +43,8 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     return isNaN(num) ? undefined : num;
   };
 
-  const low = parseThreshold(conf.thresholdLow);
-  const high = parseThreshold(conf.thresholdHigh);
+  const low = parseThreshold(conf.thresholdLow); // Ziel (z.B. 10)
+  const mid = parseThreshold(conf.thresholdMid); // Zwischenstufe (z.B. 5)
 
   // --- Hintergrundfarbe ---
   let bg = "#FFD54F"; // Standard gelb
@@ -55,17 +55,17 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     else if (color === "gray") bg = "#e0e0e0";
     else bg = "#FFD54F";
   } else {
-    bg = "#f4f4f4";
+    bg = "#f4f4f4"; // Simple Mode = neutral
   }
 
-  // 👉 Pipeline: Farbe überschreiben je nach Thresholds
-  if (conf.statusLogic === "pipeline" && data) {
-    if (low !== undefined && data.count < low) {
+  // 👉 Pipeline-Farben anhand thresholds
+  if (conf.statusLogic === "pipeline" && data && low !== undefined && mid !== undefined) {
+    if (data.count < mid) {
       bg = "#E57373"; // rot
-    } else if (high !== undefined && data.count >= high) {
-      bg = "#9EB384"; // grün
+    } else if (data.count < low) {
+      bg = "#FFD54F"; // gelb
     } else {
-      bg = "#FFD54F"; // orange
+      bg = "#9EB384"; // grün
     }
   }
 
@@ -78,25 +78,25 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? ""
     : simpleMode
     ? ""
-    : conf.statusLogic === "pipeline"
+    : conf.statusLogic === "pipeline" && low !== undefined && mid !== undefined
     ? (() => {
-        if (!data) return "";
-        if (low !== undefined && data.count < low) {
-          const diff = high !== undefined ? high - data.count : 0;
-          return `Schade, nur ${data.count} Leads – Ziel: ${high} (es fehlen ${diff})`;
+        if (data!.count < mid) {
+          const diff = low - data!.count;
+          return `Noch ${diff} bis zum Ziel von ${low}`;
         }
-        if (high !== undefined && data.count >= high) {
-          return `Sehr gut, Ziel erreicht: ${data.count} Leads (Ziel: ${high})`;
+        if (data!.count < low) {
+          const diff = low - data!.count;
+          return `Fast geschafft, nur noch ${diff} bis zum Ziel von ${low}`;
         }
-        return `${data.count} Leads – Ziel: ${high}`;
+        return `Ziel von ${low} erreicht`;
       })()
-    : data.status === "green"
+    : data!.status === "green"
     ? "Alles erledigt"
-    : data.status === "red"
-    ? `Älteste offen: ${data.maxAgeDays} Tage`
-    : data.status === "gray"
+    : data!.status === "red"
+    ? `Älteste offen: ${data!.maxAgeDays} Tage`
+    : data!.status === "gray"
     ? ""
-    : `Offene: bis ${data.maxAgeDays} Tage`;
+    : `Offene: bis ${data!.maxAgeDays} Tage`;
 
   // --- Wertanzeige ---
   let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
