@@ -36,19 +36,18 @@ type ApiResp = {
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const simpleMode = conf.logicType === "Nur zählen";
 
-  // --- Zahlen parsen ---
   const parseNum = (val?: string) => {
     if (!val) return undefined;
     const num = parseInt(val, 10);
     return isNaN(num) ? undefined : num;
   };
 
-  const leadTarget = parseNum((conf as any).leadTarget);     // 🎯 Zielwert (z. B. 10)
-  const leadThreshold = parseNum((conf as any).leadThreshold); // ⚠️ Untergrenze (z. B. 5)
+  const leadTarget = parseNum(conf.leadTarget);
+  const leadThreshold = parseNum(conf.leadThreshold);
 
   // --- Hintergrundfarbe ---
-  let bg = "#FFD54F"; // Standard gelb
-  if (!simpleMode && data && leadTarget !== undefined && leadThreshold !== undefined) {
+  let bg = "#FFD54F"; // default gelb
+  if (conf.statusLogic === "pipeline" && data && leadTarget && leadThreshold) {
     if (data.count < leadThreshold) {
       bg = "#E57373"; // rot
     } else if (data.count < leadTarget) {
@@ -58,34 +57,38 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     }
   } else if (simpleMode) {
     bg = "#f4f4f4";
+  } else {
+    const color = err ? "red" : data?.status || "amber";
+    if (color === "green") bg = "#9EB384";
+    else if (color === "red") bg = "#E57373";
+    else if (color === "gray") bg = "#e0e0e0";
   }
 
   // --- Subtext ---
-  const sub = err
-    ? err
-    : !data
-    ? "Lade..."
-    : conf.showDateInfo === false
-    ? ""
-    : simpleMode
-    ? ""
-    : conf.statusLogic === "pipeline" && leadTarget !== undefined && leadThreshold !== undefined
-    ? (() => {
-        if (data!.count < leadTarget) {
-          const diff = leadTarget - data!.count;
-          return `Dir fehlen nur noch ${diff} bis zum Ziel von ${leadTarget}`;
-        }
-        return `Ziel von ${leadTarget} erreicht`;
-      })()
-    : data!.status === "green"
-    ? "Alles erledigt"
-    : data!.status === "red"
-    ? `Älteste offen: ${data!.maxAgeDays} Tage`
-    : data!.status === "gray"
-    ? ""
-    : `Offene: bis ${data!.maxAgeDays} Tage`;
+  let sub = "";
+  if (err) {
+    sub = err;
+  } else if (!data) {
+    sub = "Lade...";
+  } else if (!simpleMode) {
+    if (conf.statusLogic === "pipeline" && leadTarget && leadThreshold) {
+      if (data.count < leadTarget) {
+        const diff = leadTarget - data.count;
+        sub = `Dir fehlen nur noch ${diff} bis zum Ziel von ${leadTarget}`;
+      } else {
+        sub = `Ziel von ${leadTarget} erreicht`;
+      }
+    } else {
+      // Standard-Widgets
+      if (conf.showDateInfo !== false) {
+        if (data.status === "green") sub = "Alles erledigt";
+        else if (data.status === "red") sub = `Älteste offen: ${data.maxAgeDays} Tage`;
+        else if (data.status !== "gray") sub = `Offene: bis ${data.maxAgeDays} Tage`;
+      }
+    }
+  }
 
-  // --- Wertanzeige ---
+  // --- Value ---
   let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
   if (!err && data && data.value !== undefined && data.value !== null) {
     if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
@@ -93,8 +96,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     }
   }
 
-  // --- Karte ---
-  const card = (
+  return (
     <div
       className="card"
       style={{ background: bg, color: simpleMode ? "#333" : "#fff" }}
@@ -103,19 +105,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
       <div className="card-value">{valueDisplay}</div>
       {sub && <div className="card-sub">{sub}</div>}
     </div>
-  );
-
-  return conf.target ? (
-    <a
-      href={conf.target}
-      target={conf.targetBlank === false ? "_self" : "_blank"}
-      rel="noreferrer"
-      style={{ textDecoration: "none" }}
-    >
-      {card}
-    </a>
-  ) : (
-    card
   );
 }
 
