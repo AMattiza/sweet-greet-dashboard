@@ -18,57 +18,60 @@ type KPIConf = {
   bereich?: string;
   filterField?: string;
   personen?: string[];
-  logicType?: string; // z.B. "Nur zählen" oder "Mit Status"
+  logicType?: string;   // Optik: "Nur zählen", "Vergangenheit" etc.
+  statusLogic?: string; // Logiksteuerung: "pipeline", "fixedGreen", "fixedGray" etc.
 };
 
 type ApiResp = {
   count: number;
   maxAgeDays: number;
-  status: "green" | "amber" | "red" | "gray"; // 👉 gray ergänzt
+  status: "green" | "amber" | "red" | "gray";
   value?: string | number | null;
 };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const simpleMode = conf.logicType === "Nur zählen";
 
+  // Hintergrundfarbe
   let bg = "#FFD54F"; // Standard gelb
   if (!simpleMode) {
     const color = err ? "red" : data?.status || "amber";
     if (color === "green") bg = "#9EB384";
     else if (color === "red") bg = "#E57373";
-    else if (color === "gray") bg = "#e0e0e0"; // 👉 NEU: Grau
+    else if (color === "gray") bg = "#e0e0e0";
     else bg = "#FFD54F";
   } else {
-    bg = "#f4f4f4"; // Simple Mode immer hellgrau
+    bg = "#f4f4f4"; // Simple Mode = hellgrau
   }
 
- const sub = err
-  ? err
-  : !data
-  ? "Lade..."
-  : conf.showDateInfo === false
-  ? ""
-  : simpleMode
-  ? ""
-  : conf.statusLogic === "pipeline" // 👉 statt logicType
-  ? (data.count === 0 ? "Keine Leads" : `${data.count} Leads vorhanden`)
-  : data.status === "green"
-  ? "Alles erledigt"
-  : data.status === "red"
-  ? `Älteste offen: ${data.maxAgeDays} Tage`
-  : data.status === "gray"
-  ? "" // 👉 Grau bewusst neutral
-  : `Offene: bis ${data.maxAgeDays} Tage`;
-  
-  // 👉 Wert-Logik (inkl. Währung)
-  let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
+  // Subtext
+  const sub = err
+    ? err
+    : !data
+    ? "Lade..."
+    : conf.showDateInfo === false
+    ? ""
+    : simpleMode
+    ? ""
+    : conf.statusLogic === "pipeline"
+    ? (data.count === 0 ? "Keine Leads" : `${data.count} Leads vorhanden`)
+    : data.status === "green"
+    ? "Alles erledigt"
+    : data.status === "red"
+    ? `Älteste offen: ${data.maxAgeDays} Tage`
+    : data.status === "gray"
+    ? "" // Grau = neutral
+    : `Offene: bis ${data.maxAgeDays} Tage`;
 
+  // Wert-Logik
+  let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
   if (!err && data && data.value !== undefined && data.value !== null) {
     if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
       valueDisplay = `€${data.value.toFixed(2)}`;
     }
   }
 
+  // Card-Element
   const card = (
     <div
       className="card"
@@ -80,6 +83,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     </div>
   );
 
+  // Klickbar machen, falls Ziel vorhanden
   return conf.target ? (
     <a
       href={conf.target}
@@ -129,9 +133,8 @@ export default function GridInner() {
       if (c.formula) u.searchParams.set("formula", c.formula);
       if (c.dateField) u.searchParams.set("dateField", c.dateField);
       if (c.redDays) u.searchParams.set("redDays", String(c.redDays));
-
-      if ((c as any).field) u.searchParams.set("field", (c as any).field);
-      if ((c as any).statusLogic) u.searchParams.set("statusLogic", (c as any).statusLogic);
+      if (c.field) u.searchParams.set("field", c.field);
+      if (c.statusLogic) u.searchParams.set("statusLogic", c.statusLogic);
 
       fetch(u.toString())
         .then((r) => r.json())
