@@ -36,37 +36,28 @@ type ApiResp = {
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const simpleMode = conf.logicType === "Nur zählen";
 
-  // --- Thresholds sicher parsen ---
-  const parseThreshold = (val?: string) => {
+  // --- Zahlen parsen ---
+  const parseNum = (val?: string) => {
     if (!val) return undefined;
     const num = parseInt(val, 10);
     return isNaN(num) ? undefined : num;
   };
 
-  const low = parseThreshold(conf.thresholdLow); // Ziel (z.B. 10)
-  const mid = parseThreshold(conf.thresholdMid); // Zwischenstufe (z.B. 5)
+  const leadTarget = parseNum((conf as any).leadTarget);     // 🎯 Zielwert (z. B. 10)
+  const leadThreshold = parseNum((conf as any).leadThreshold); // ⚠️ Untergrenze (z. B. 5)
 
   // --- Hintergrundfarbe ---
   let bg = "#FFD54F"; // Standard gelb
-  if (!simpleMode) {
-    const color = err ? "red" : data?.status || "amber";
-    if (color === "green") bg = "#9EB384";
-    else if (color === "red") bg = "#E57373";
-    else if (color === "gray") bg = "#e0e0e0";
-    else bg = "#FFD54F";
-  } else {
-    bg = "#f4f4f4"; // Simple Mode = neutral
-  }
-
-  // 👉 Pipeline-Farben anhand thresholds
-  if (conf.statusLogic === "pipeline" && data && low !== undefined && mid !== undefined) {
-    if (data.count < mid) {
+  if (!simpleMode && data && leadTarget !== undefined && leadThreshold !== undefined) {
+    if (data.count < leadThreshold) {
       bg = "#E57373"; // rot
-    } else if (data.count < low) {
-      bg = "#FFD54F"; // gelb
+    } else if (data.count < leadTarget) {
+      bg = "#FFD54F"; // orange
     } else {
       bg = "#9EB384"; // grün
     }
+  } else if (simpleMode) {
+    bg = "#f4f4f4";
   }
 
   // --- Subtext ---
@@ -78,17 +69,13 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? ""
     : simpleMode
     ? ""
-    : conf.statusLogic === "pipeline" && low !== undefined && mid !== undefined
+    : conf.statusLogic === "pipeline" && leadTarget !== undefined && leadThreshold !== undefined
     ? (() => {
-        if (data!.count < mid) {
-          const diff = low - data!.count;
-          return `Noch ${diff} bis zum Ziel von ${low}`;
+        if (data!.count < leadTarget) {
+          const diff = leadTarget - data!.count;
+          return `Dir fehlen nur noch ${diff} bis zum Ziel von ${leadTarget}`;
         }
-        if (data!.count < low) {
-          const diff = low - data!.count;
-          return `Fast geschafft, nur noch ${diff} bis zum Ziel von ${low}`;
-        }
-        return `Ziel von ${low} erreicht`;
+        return `Ziel von ${leadTarget} erreicht`;
       })()
     : data!.status === "green"
     ? "Alles erledigt"
@@ -110,7 +97,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
   const card = (
     <div
       className="card"
-      style={{ background: bg, color: simpleMode || data?.status === "gray" ? "#333" : "#fff" }}
+      style={{ background: bg, color: simpleMode ? "#333" : "#fff" }}
     >
       <div className="card-title">{conf.label}</div>
       <div className="card-value">{valueDisplay}</div>
