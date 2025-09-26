@@ -24,19 +24,22 @@ type KPIConf = {
 type ApiResp = {
   count: number;
   maxAgeDays: number;
-  status: "green" | "amber" | "red";
-  value?: string | number | null; // 👉 NEU: Feldwert vom Backend
+  status: "green" | "amber" | "red" | "gray"; // 👉 gray ergänzt
+  value?: string | number | null;
 };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const simpleMode = conf.logicType === "Nur zählen";
 
-  let bg = "#FFD54F";
+  let bg = "#FFD54F"; // Standard gelb
   if (!simpleMode) {
     const color = err ? "red" : data?.status || "amber";
-    bg = color === "green" ? "#9EB384" : color === "red" ? "#E57373" : "#FFD54F";
+    if (color === "green") bg = "#9EB384";
+    else if (color === "red") bg = "#E57373";
+    else if (color === "gray") bg = "#e0e0e0"; // 👉 NEU: Grau
+    else bg = "#FFD54F";
   } else {
-    bg = "#f4f4f4";
+    bg = "#f4f4f4"; // Simple Mode immer hellgrau
   }
 
   const sub = err
@@ -51,9 +54,11 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? "Alles erledigt"
     : data.status === "red"
     ? `Älteste offen: ${data.maxAgeDays} Tage`
+    : data.status === "gray"
+    ? "" // 👉 Grau bewusst neutral halten
     : `Offene: bis ${data.maxAgeDays} Tage`;
 
-  // 👉 Hier Währungsformatierung einbauen
+  // 👉 Wert-Logik (inkl. Währung)
   let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
 
   if (!err && data && data.value !== undefined && data.value !== null) {
@@ -63,7 +68,10 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
   }
 
   const card = (
-    <div className="card" style={{ background: bg, color: simpleMode ? "#333" : "#fff" }}>
+    <div
+      className="card"
+      style={{ background: bg, color: simpleMode || data?.status === "gray" ? "#333" : "#fff" }}
+    >
       <div className="card-title">{conf.label}</div>
       <div className="card-value">{valueDisplay}</div>
       {sub && <div className="card-sub">{sub}</div>}
@@ -120,8 +128,8 @@ export default function GridInner() {
       if (c.dateField) u.searchParams.set("dateField", c.dateField);
       if (c.redDays) u.searchParams.set("redDays", String(c.redDays));
 
-      // 👉 Falls Widget ein Feld direkt anfordert
       if ((c as any).field) u.searchParams.set("field", (c as any).field);
+      if ((c as any).statusLogic) u.searchParams.set("statusLogic", (c as any).statusLogic);
 
       fetch(u.toString())
         .then((r) => r.json())
