@@ -18,10 +18,8 @@ type KPIConf = {
   bereich?: string;
   filterField?: string;
   personen?: string[];
-  logicType?: string;
-  statusLogic?: string;
-
-  // 👉 neu
+  logicType?: string; 
+  statusLogic?: string; 
   field?: string;
   thresholdLow?: string;
   thresholdMid?: string;
@@ -38,32 +36,24 @@ type ApiResp = {
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const simpleMode = conf.logicType === "Nur zählen";
 
-  // Thresholds aus Config ziehen (Airtable liefert als String → parseInt)
-  const low = conf.thresholdLow ? parseInt(conf.thresholdLow) : 0;
-  const mid = conf.thresholdMid ? parseInt(conf.thresholdMid) : 0;
-  const high = conf.thresholdHigh ? parseInt(conf.thresholdHigh) : 0;
-  const target = conf.target ? parseInt(conf.target) : undefined;
-
-  // --- Hintergrundfarbe bestimmen ---
-  let bg = "#FFD54F"; // Standard gelb
+  // Hintergrundfarbe
+  let bg = "#FFD54F";
   if (!simpleMode) {
-    if (conf.statusLogic === "pipeline" && data) {
-      if (data.count <= low) bg = "#E57373";        // rot
-      else if (data.count <= mid) bg = "#FFD54F";   // orange
-      else if (data.count >= high) bg = "#9EB384";  // grün
-      else bg = "#FFD54F";                          // fallback
-    } else {
-      const color = err ? "red" : data?.status || "amber";
-      if (color === "green") bg = "#9EB384";
-      else if (color === "red") bg = "#E57373";
-      else if (color === "gray") bg = "#e0e0e0";
-      else bg = "#FFD54F";
-    }
+    const color = err ? "red" : data?.status || "amber";
+    if (color === "green") bg = "#9EB384";
+    else if (color === "red") bg = "#E57373";
+    else if (color === "gray") bg = "#e0e0e0";
+    else bg = "#FFD54F";
   } else {
     bg = "#f4f4f4";
   }
 
-  // --- Subtext bestimmen ---
+  // Thresholds als Zahlen casten
+  const low = conf.thresholdLow ? parseInt(conf.thresholdLow, 10) : undefined;
+  const mid = conf.thresholdMid ? parseInt(conf.thresholdMid, 10) : undefined;
+  const high = conf.thresholdHigh ? parseInt(conf.thresholdHigh, 10) : undefined;
+
+  // Subtext
   const sub = err
     ? err
     : !data
@@ -72,14 +62,18 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? ""
     : simpleMode
     ? ""
-    : conf.statusLogic === "pipeline" && data
-    ? target !== undefined
-      ? data.count >= target
-        ? `Top! Ziel erreicht (${data.count}/${target})`
-        : `Schade, ${target - data.count} Leads zu wenig`
-      : data.count === 0
-      ? "Keine Leads"
-      : `${data.count} Leads vorhanden`
+    : conf.statusLogic === "pipeline"
+    ? (() => {
+        if (!data) return "";
+        if (low !== undefined && data.count < low) {
+          const diff = low - data.count;
+          return `Schade, ${diff} Leads zu wenig`;
+        }
+        if (high !== undefined && data.count >= high) {
+          return "Sehr gut, genügend Leads!";
+        }
+        return `${data.count} Leads vorhanden`;
+      })()
     : data.status === "green"
     ? "Alles erledigt"
     : data.status === "red"
@@ -88,7 +82,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? ""
     : `Offene: bis ${data.maxAgeDays} Tage`;
 
-  // --- Wert anzeigen ---
+  // Wertanzeige
   let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
   if (!err && data && data.value !== undefined && data.value !== null) {
     if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
@@ -128,7 +122,7 @@ export default function GridInner() {
   const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
   const [confs, setConfs] = useState<KPIConf[]>([]);
 
-  // Lade Widgets aus API (/api/widgets)
+  // Widgets laden
   useEffect(() => {
     fetch(`/api/widgets?preset=${presetKey}`)
       .then((r) => r.json())
@@ -144,7 +138,7 @@ export default function GridInner() {
       });
   }, [presetKey]);
 
-  // Lade Daten pro Widget
+  // Daten pro Widget laden
   useEffect(() => {
     if (!confs.length) return;
     setItems(confs.map((c) => ({ conf: c })));
@@ -158,6 +152,9 @@ export default function GridInner() {
       if (c.redDays) u.searchParams.set("redDays", String(c.redDays));
       if (c.field) u.searchParams.set("field", c.field);
       if (c.statusLogic) u.searchParams.set("statusLogic", c.statusLogic);
+      if (c.thresholdLow) u.searchParams.set("thresholdLow", c.thresholdLow);
+      if (c.thresholdMid) u.searchParams.set("thresholdMid", c.thresholdMid);
+      if (c.thresholdHigh) u.searchParams.set("thresholdHigh", c.thresholdHigh);
 
       fetch(u.toString())
         .then((r) => r.json())
