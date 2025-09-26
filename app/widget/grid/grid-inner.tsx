@@ -43,21 +43,23 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
   }
 
   const sub = err
-    ? err
-    : !data
-    ? "Lade..."
-    : conf.showDateInfo === false
-    ? ""
-    : simpleMode
-    ? ""
-    : data.status === "green"
-    ? "Alles erledigt"
-    : data.status === "red"
-    ? `Älteste offen: ${data.maxAgeDays} Tage`
-    : data.status === "gray"
-    ? "" // 👉 Grau bewusst neutral halten
-    : `Offene: bis ${data.maxAgeDays} Tage`;
-
+  ? err
+  : !data
+  ? "Lade..."
+  : conf.showDateInfo === false
+  ? ""
+  : simpleMode
+  ? ""
+  : conf.logicType === "pipeline"
+  ? (data.count === 0 ? "Keine Leads" : `${data.count} Leads vorhanden`)
+  : data.status === "green"
+  ? "Alles erledigt"
+  : data.status === "red"
+  ? `Älteste offen: ${data.maxAgeDays} Tage`
+  : data.status === "gray"
+  ? "" // 👉 Grau bewusst neutral
+  : `Offene: bis ${data.maxAgeDays} Tage`;
+  
   // 👉 Wert-Logik (inkl. Währung)
   let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
 
