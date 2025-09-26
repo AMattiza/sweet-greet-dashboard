@@ -44,7 +44,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
   };
 
   const low = parseThreshold(conf.thresholdLow);
-  const mid = parseThreshold(conf.thresholdMid);
   const high = parseThreshold(conf.thresholdHigh);
 
   // --- Hintergrundfarbe ---
@@ -56,17 +55,17 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     else if (color === "gray") bg = "#e0e0e0";
     else bg = "#FFD54F";
   } else {
-    bg = "#f4f4f4"; // Simple Mode = neutral
+    bg = "#f4f4f4";
   }
 
-  // 👉 Pipeline-abhängig Farben dynamisch überschreiben
+  // 👉 Pipeline: Farbe überschreiben je nach Thresholds
   if (conf.statusLogic === "pipeline" && data) {
     if (low !== undefined && data.count < low) {
       bg = "#E57373"; // rot
-    } else if (mid !== undefined && data.count < mid) {
-      bg = "#FFD54F"; // orange
     } else if (high !== undefined && data.count >= high) {
       bg = "#9EB384"; // grün
+    } else {
+      bg = "#FFD54F"; // orange
     }
   }
 
@@ -83,16 +82,13 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? (() => {
         if (!data) return "";
         if (low !== undefined && data.count < low) {
-          const diff = low - data.count;
-          return `Schade, ${diff} Leads zu wenig`;
+          const diff = high !== undefined ? high - data.count : 0;
+          return `Schade, nur ${data.count} Leads – Ziel: ${high} (es fehlen ${diff})`;
         }
         if (high !== undefined && data.count >= high) {
-          return "Sehr gut, genügend Leads!";
+          return `Sehr gut, Ziel erreicht: ${data.count} Leads (Ziel: ${high})`;
         }
-        if (mid !== undefined && data.count < mid) {
-          return `${data.count} Leads – ausbaufähig`;
-        }
-        return `${data.count} Leads vorhanden`;
+        return `${data.count} Leads – Ziel: ${high}`;
       })()
     : data.status === "green"
     ? "Alles erledigt"
