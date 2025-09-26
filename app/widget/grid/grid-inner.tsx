@@ -21,9 +21,10 @@ type KPIConf = {
   logicType?: string; 
   statusLogic?: string; 
   field?: string;
-  thresholdLow?: string;
-  thresholdMid?: string;
-  thresholdHigh?: string;
+
+  // 👉 NEU für Pipeline-Widgets
+  leadTarget?: string;       // Zielwert, z.B. "10"
+  leadThreshold?: string;    // Mindestwert, z.B. "5"
 };
 
 type ApiResp = {
