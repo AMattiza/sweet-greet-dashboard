@@ -36,8 +36,19 @@ type ApiResp = {
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const simpleMode = conf.logicType === "Nur zählen";
 
-  // Hintergrundfarbe
-  let bg = "#FFD54F";
+  // --- Thresholds sicher parsen ---
+  const parseThreshold = (val?: string) => {
+    if (!val) return undefined;
+    const num = parseInt(val, 10);
+    return isNaN(num) ? undefined : num;
+  };
+
+  const low = parseThreshold(conf.thresholdLow);
+  const mid = parseThreshold(conf.thresholdMid);
+  const high = parseThreshold(conf.thresholdHigh);
+
+  // --- Hintergrundfarbe ---
+  let bg = "#FFD54F"; // Standard gelb
   if (!simpleMode) {
     const color = err ? "red" : data?.status || "amber";
     if (color === "green") bg = "#9EB384";
@@ -45,15 +56,21 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     else if (color === "gray") bg = "#e0e0e0";
     else bg = "#FFD54F";
   } else {
-    bg = "#f4f4f4";
+    bg = "#f4f4f4"; // Simple Mode = neutral
   }
 
-  // Thresholds als Zahlen casten
-  const low = conf.thresholdLow ? parseInt(conf.thresholdLow, 10) : undefined;
-  const mid = conf.thresholdMid ? parseInt(conf.thresholdMid, 10) : undefined;
-  const high = conf.thresholdHigh ? parseInt(conf.thresholdHigh, 10) : undefined;
+  // 👉 Pipeline-abhängig Farben dynamisch überschreiben
+  if (conf.statusLogic === "pipeline" && data) {
+    if (low !== undefined && data.count < low) {
+      bg = "#E57373"; // rot
+    } else if (mid !== undefined && data.count < mid) {
+      bg = "#FFD54F"; // orange
+    } else if (high !== undefined && data.count >= high) {
+      bg = "#9EB384"; // grün
+    }
+  }
 
-  // Subtext
+  // --- Subtext ---
   const sub = err
     ? err
     : !data
@@ -72,6 +89,9 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
         if (high !== undefined && data.count >= high) {
           return "Sehr gut, genügend Leads!";
         }
+        if (mid !== undefined && data.count < mid) {
+          return `${data.count} Leads – ausbaufähig`;
+        }
         return `${data.count} Leads vorhanden`;
       })()
     : data.status === "green"
@@ -82,7 +102,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? ""
     : `Offene: bis ${data.maxAgeDays} Tage`;
 
-  // Wertanzeige
+  // --- Wertanzeige ---
   let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
   if (!err && data && data.value !== undefined && data.value !== null) {
     if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
@@ -90,6 +110,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     }
   }
 
+  // --- Karte ---
   const card = (
     <div
       className="card"
