@@ -18,9 +18,13 @@ type KPIConf = {
   bereich?: string;
   filterField?: string;
   personen?: string[];
-  logicType?: string;   // Optiksteuerung
-  statusLogic?: string; // Logiksteuerung
-  field?: string;       // 👉 NEU: für Werte-Aggregation
+  logicType?: string;
+  statusLogic?: string;
+
+  // 👉 neu für Schwellenwerte
+  thresholdLow?: string;
+  thresholdMid?: string;
+  thresholdHigh?: string;
 };
 
 type ApiResp = {
@@ -33,19 +37,32 @@ type ApiResp = {
 function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
   const simpleMode = conf.logicType === "Nur zählen";
 
-  // Hintergrundfarbe
+  // Thresholds aus Config ziehen (Airtable liefert als String → parseInt)
+  const low = conf.thresholdLow ? parseInt(conf.thresholdLow) : 0;
+  const mid = conf.thresholdMid ? parseInt(conf.thresholdMid) : 0;
+  const high = conf.thresholdHigh ? parseInt(conf.thresholdHigh) : 0;
+  const target = conf.target ? parseInt(conf.target) : undefined;
+
+  // --- Hintergrundfarbe bestimmen ---
   let bg = "#FFD54F"; // Standard gelb
   if (!simpleMode) {
-    const color = err ? "red" : data?.status || "amber";
-    if (color === "green") bg = "#9EB384";
-    else if (color === "red") bg = "#E57373";
-    else if (color === "gray") bg = "#e0e0e0";
-    else bg = "#FFD54F";
+    if (conf.statusLogic === "pipeline" && data) {
+      if (data.count <= low) bg = "#E57373";        // rot
+      else if (data.count <= mid) bg = "#FFD54F";   // orange
+      else if (data.count >= high) bg = "#9EB384";  // grün
+      else bg = "#FFD54F";                          // fallback
+    } else {
+      const color = err ? "red" : data?.status || "amber";
+      if (color === "green") bg = "#9EB384";
+      else if (color === "red") bg = "#E57373";
+      else if (color === "gray") bg = "#e0e0e0";
+      else bg = "#FFD54F";
+    }
   } else {
-    bg = "#f4f4f4"; // Simple Mode = hellgrau
+    bg = "#f4f4f4";
   }
 
-  // Subtext
+  // --- Subtext bestimmen ---
   const sub = err
     ? err
     : !data
@@ -54,17 +71,23 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     ? ""
     : simpleMode
     ? ""
-    : conf.statusLogic === "pipeline"
-    ? (data.count === 0 ? "Keine Leads" : `${data.count} Leads vorhanden`)
+    : conf.statusLogic === "pipeline" && data
+    ? target !== undefined
+      ? data.count >= target
+        ? `Top! Ziel erreicht (${data.count}/${target})`
+        : `Schade, ${target - data.count} Leads zu wenig`
+      : data.count === 0
+      ? "Keine Leads"
+      : `${data.count} Leads vorhanden`
     : data.status === "green"
     ? "Alles erledigt"
     : data.status === "red"
     ? `Älteste offen: ${data.maxAgeDays} Tage`
     : data.status === "gray"
-    ? "" // Grau = neutral
+    ? ""
     : `Offene: bis ${data.maxAgeDays} Tage`;
 
-  // Wert-Logik
+  // --- Wert anzeigen ---
   let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
   if (!err && data && data.value !== undefined && data.value !== null) {
     if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
@@ -72,7 +95,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     }
   }
 
-  // Card-Element
   const card = (
     <div
       className="card"
@@ -84,7 +106,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
     </div>
   );
 
-  // Klickbar machen, falls Ziel vorhanden
   return conf.target ? (
     <a
       href={conf.target}
