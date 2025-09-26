@@ -21,7 +21,8 @@ type KPIConf = {
   logicType?: string;
   statusLogic?: string;
 
-  // 👉 neu für Schwellenwerte
+  // 👉 neu
+  field?: string;
   thresholdLow?: string;
   thresholdMid?: string;
   thresholdHigh?: string;
