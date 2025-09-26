@@ -17,10 +17,9 @@ export async function GET(req: Request) {
     const dateField = searchParams.get("dateField") || undefined;
     const redDays = parseInt(searchParams.get("redDays") || "0");
     const list = searchParams.get("list");
-
-    // NEU: optionales Feld + Aggregation
     const field = searchParams.get("field") || undefined;
     const aggregate = searchParams.get("aggregate") || "first"; // first | sum | avg
+    const statusLogic = searchParams.get("statusLogic") || "tasks"; // NEU
 
     console.log("📊 KPI-Request:", {
       table,
@@ -31,6 +30,7 @@ export async function GET(req: Request) {
       list,
       field,
       aggregate,
+      statusLogic,
     });
 
     // Airtable Records laden
@@ -66,14 +66,30 @@ export async function GET(req: Request) {
       }
     }
 
-    let status: "green" | "amber" | "red" = "amber";
-    if (count === 0) {
+    // Statuslogik
+    let status: "green" | "amber" | "red" | "gray" = "amber";
+
+    if (statusLogic === "tasks") {
+      if (count === 0) {
+        status = "green";
+      } else if (maxAgeDays > redDays) {
+        status = "red";
+      }
+    } else if (statusLogic === "pipeline") {
+      if (count === 0) {
+        status = "red";
+      } else {
+        status = "green";
+      }
+    } else if (statusLogic === "fixedGreen") {
       status = "green";
-    } else if (maxAgeDays > redDays) {
+    } else if (statusLogic === "fixedRed") {
       status = "red";
+    } else if (statusLogic === "fixedGray") {
+      status = "gray";
     }
 
-    // Feldwert extrahieren
+    // Feldwerte für Aggregationen
     let value: string | number | null = null;
     if (field && recs.length > 0) {
       const values = recs
