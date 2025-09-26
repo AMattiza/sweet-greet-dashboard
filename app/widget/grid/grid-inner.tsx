@@ -146,9 +146,6 @@ export default function GridInner() {
       if (c.redDays) u.searchParams.set("redDays", String(c.redDays));
       if (c.field) u.searchParams.set("field", c.field);
       if (c.statusLogic) u.searchParams.set("statusLogic", c.statusLogic);
-      if (c.thresholdLow) u.searchParams.set("thresholdLow", c.thresholdLow);
-      if (c.thresholdMid) u.searchParams.set("thresholdMid", c.thresholdMid);
-      if (c.thresholdHigh) u.searchParams.set("thresholdHigh", c.thresholdHigh);
 
       fetch(u.toString())
         .then((r) => r.json())
