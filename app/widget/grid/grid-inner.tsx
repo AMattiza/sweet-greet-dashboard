@@ -18,8 +18,9 @@ type KPIConf = {
   bereich?: string;
   filterField?: string;
   personen?: string[];
-  logicType?: string;   // Optik: "Nur zählen", "Vergangenheit" etc.
-  statusLogic?: string; // Logiksteuerung: "pipeline", "fixedGreen", "fixedGray" etc.
+  logicType?: string;   // Optiksteuerung
+  statusLogic?: string; // Logiksteuerung
+  field?: string;       // 👉 NEU: für Werte-Aggregation
 };
 
 type ApiResp = {
