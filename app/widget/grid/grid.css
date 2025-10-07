@@ -1,38 +1,51 @@
-/* Google Fonts laden */
+/* =============================
+   FONTS & GLOBAL BASICS
+============================= */
+
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@600&family=Inter:wght@300&display=swap');
 
 html, body {
   margin: 0;
   padding: 0;
   min-height: 0;
+  font-family: 'Inter', sans-serif;
+  color: #74786E;
+  background: #FFFFFF;
 }
 
-/* Root-Container */
+/* =============================
+   ROOT / GRID LAYOUT
+============================= */
+
 #kpi-root {
   padding: 16px;
   box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
-  background: #FFFFFF; /* Softr Background */
-  color: #74786E;      /* Softr Text */
-  overflow: visible !important; /* verhindert Abschneiden im Softr-Iframe */
+  overflow: visible !important; /* verhindert Clipping in Softr */
 }
 
-/* Grid Layout */
 .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  overflow: visible !important; /* erlaubt Schatten/Radius auch am Rand */
+  overflow: visible !important;
 }
 
-/* Widget-Karten */
-.card {
+/* =============================
+   KPI WIDGETS (Standard Cards)
+============================= */
+
+.card,
+.distribution-card {
   border-radius: 12px;
   padding: 18px;
-  text-align: center;
   box-shadow: 0 2px 10px rgba(0,0,0,.06);
-  color: #FFFFFF; /* Text bleibt weiß, Hintergrund variiert */
   overflow: visible;
+  margin-bottom: 8px; /* einheitlicher Abstand */
+}
+
+.card {
+  text-align: center;
+  color: #FFFFFF;
 }
 
 /* Titel (Heading) → DM Sans Semibold */
@@ -56,7 +69,7 @@ html, body {
   font-family: 'Inter', sans-serif;
   font-weight: 300;
   font-size: 12px;
-  opacity: .95;
+  opacity: 0.95;
 }
 
 /* Status-Farben */
@@ -64,47 +77,35 @@ html, body {
 .card.red    { background: #E57373; } /* Weiches Rot */
 .card.orange { background: #DA9D41; } /* Neues Orange */
 
-/* --------------------------------------------- */
-/* 🔧 Zusatz: sauberes Verhalten im Softr-Iframe  */
-/* --------------------------------------------- */
+/* =============================
+   SOFTR / IFRAME FIXES
+============================= */
 
-/* Sorgt für sichtbaren Schatten und gleichmäßigen unteren Abstand */
 iframe,
 [data-iframe-overflowed],
-[data-iframe-size] {
-  overflow: visible !important;
-}
-
-/* Verhindert, dass Schatten abgeschnitten werden */
-.custom-code1-74e685d2-c393-4a85-814b-ccd869dc473d {
-  padding-bottom: 1rem !important;
-}
-
-/* Einheitlicher Abstand unten bei eingebetteten KPI- und Balken-Widgets */
-#kpi-root .card {
-  margin-bottom: 8px;
-}
-
-/* Sicherstellt, dass auch Container mit flex/iframe nicht clippen */
+[data-iframe-size],
 [data-frame-overflow],
 [data-iframe-height] {
   overflow: visible !important;
   padding-bottom: 16px !important;
 }
 
+/* Custom Softr Code Wrapper */
+.custom-code1-74e685d2-c393-4a85-814b-ccd869dc473d {
+  padding-bottom: 1rem !important;
+}
+
 /* =============================
-   DISTRIBUTION BAR STYLING
+   DISTRIBUTION BAR WIDGET
 ============================= */
 
 .distribution-card {
   background: #fff;
-  color: #74786e;
+  color: #74786E;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  border-radius: 12px;
-  padding: 18px;
+  text-align: center; /* Angleichen an KPI-Karten */
 }
 
 .distribution-header {
@@ -130,21 +131,21 @@ iframe,
   justify-content: center;
   align-items: center;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
   white-space: nowrap;
   padding: 6px 4px;
   transition: all 0.3s ease;
 }
 
 .segment-title {
-  font-family: "DM Sans", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 0;
 }
 
 .segment-value {
-  font-family: "DM Sans", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 600;
   font-size: 32px;
   line-height: 40px;
@@ -156,7 +157,7 @@ iframe,
 }
 
 .segment-sub {
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 300;
   font-size: 12px;
   opacity: 0.95;
@@ -165,7 +166,6 @@ iframe,
 
 /* =============================
    RESPONSIVE – MOBILE VIEW
-   Nur Zahlen sichtbar
 ============================= */
 
 @media (max-width: 768px) {
