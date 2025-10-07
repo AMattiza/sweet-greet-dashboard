@@ -2,7 +2,8 @@
 import "./grid.css";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import CardDistribution from "./CardDistribution"; // 👉 NEU für Balkenwidgets
+import CardDistribution from "./CardDistribution";
+import CardDistributionBar from "./CardDistributionBar"; // 👉 NEU: horizontale Balkenvariante
 
 type KPIConf = {
   label: string;
@@ -44,9 +45,15 @@ type ApiResp =
     };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
-  // 👉 Wenn es ein Distribution-Widget ist, spezielle Darstellung:
+  // 👉 Spezial-Widgets erkennen
   if (data?.type === "distribution") {
-    return <CardDistribution conf={conf} data={data} />;
+    // Wenn das Widget Distribution ist – prüfen, ob Bar-Style genutzt werden soll
+    const useBar = conf.statusLogic === "distribution-bar";
+    return useBar ? (
+      <CardDistributionBar conf={conf} data={data} />
+    ) : (
+      <CardDistribution conf={conf} data={data} />
+    );
   }
 
   const simpleMode = conf.logicType === "Nur zählen";
