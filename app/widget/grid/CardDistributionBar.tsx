@@ -33,7 +33,7 @@ const COLORS = [
 export default function CardDistributionBar({ conf, data }: Props) {
   const dist = data.distribution.slice(0, 8);
 
-  // 🎨 Balkenaufbau
+  // 🎨 Prozentbalken
   const bar = (
     <div
       style={{
@@ -44,7 +44,6 @@ export default function CardDistributionBar({ conf, data }: Props) {
         overflow: "hidden",
         background: "#f6f6f6",
         boxShadow: "inset 0 0 6px rgba(0,0,0,0.05)",
-        marginBottom: "8px",
       }}
     >
       {dist.map((d, i) => {
@@ -71,7 +70,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
           >
             {showFull ? (
               <>
-                <div className="card-title" style={{ marginBottom: "0px" }}>
+                <div className="card-title" style={{ marginBottom: 0 }}>
                   {d.percentage.toFixed(0)} %
                 </div>
                 <div className="card-value">{d.count}</div>
@@ -80,7 +79,10 @@ export default function CardDistributionBar({ conf, data }: Props) {
                 </div>
               </>
             ) : (
-              <div className="card-value" style={{ fontSize: "20px", lineHeight: "24px" }}>
+              <div
+                className="card-value"
+                style={{ fontSize: "20px", lineHeight: "24px" }}
+              >
                 {d.count}
               </div>
             )}
@@ -90,21 +92,18 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🧩 Inhalt der Karte
-  const card = (
+  // 🧩 Inhalt (ohne .card)
+  const content = (
     <div
-      className="card"
-      data-iframe-overflowed=""
       style={{
         background: "#fff",
         color: "#74786E",
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
-        height: "100%",
         boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
         borderRadius: "12px",
-        padding: "18px 18px 28px",
+        padding: "18px",
       }}
     >
       {/* Header */}
@@ -124,8 +123,8 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🔗 Wrapper mit KPI-Struktur
-  const wrapped = (
+  // 🔗 Integration ins Grid-System
+  return (
     <div id="kpi-root" data-iframe-size="" data-iframe-overflowed="">
       <div className="grid-container" data-iframe-overflowed="">
         {conf.target ? (
@@ -141,14 +140,12 @@ export default function CardDistributionBar({ conf, data }: Props) {
               height: "100%",
             }}
           >
-            {card}
+            {content}
           </a>
         ) : (
-          card
+          content
         )}
       </div>
     </div>
   );
-
-  return wrapped;
 }
