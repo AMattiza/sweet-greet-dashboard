@@ -20,14 +20,10 @@ type Props = {
 };
 
 const COLORS = [
-  "#9EB384", // grün
-  "#FFD54F", // gelb
-  "#E57373", // rot
-  "#64B5F6", // blau
-  "#BA68C8", // violett
-  "#4DB6AC", // türkis
-  "#F06292", // pink
-  "#A1887F", // braun
+  "#83A0A0", // cadet gray
+  "#4C5F6B", // paynes gray
+  "#2B3D41", // gunmetal
+  "#5F7069", // feldgrau
 ];
 
 export default function CardDistributionBar({ conf, data }: Props) {
