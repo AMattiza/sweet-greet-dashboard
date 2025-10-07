@@ -21,7 +21,7 @@ type Props = {
 
 const COLORS = [
   "#9EB384", // grün
-  "#DA9D41", // gelb
+  "#FFD54F", // gelb
   "#E57373", // rot
   "#64B5F6", // blau
   "#BA68C8", // violett
@@ -38,7 +38,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
       style={{
         display: "flex",
         width: "100%",
-        height: "3.25rem", // gleiches optisches Gewicht wie Zahl (40px line-height)
+        height: "4.5rem",
         borderRadius: "12px",
         overflow: "hidden",
         background: "#f4f4f4",
@@ -56,51 +56,53 @@ export default function CardDistributionBar({ conf, data }: Props) {
             backgroundColor: COLORS[i % COLORS.length],
             height: "100%",
             display: "flex",
-            alignItems: "center",
+            flexDirection: "column",
             justifyContent: "center",
+            alignItems: "center",
             color: "#fff",
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600,
-            fontSize: "32px",        // exakt wie .card-value
-            lineHeight: "40px",
-            textShadow: "0 1px 2px rgba(0,0,0,0.25)",
+            textShadow: "0 1px 2px rgba(0,0,0,0.3)",
             whiteSpace: "nowrap",
           }}
         >
-          {d.percentage >= 8 ? d.count : ""}
+          {d.percentage >= 7 && (
+            <>
+              <div
+                className="card-title"
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  marginBottom: "0px",
+                }}
+              >
+                {d.percentage.toFixed(0)} %
+              </div>
+              <div
+                className="card-value"
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 600,
+                  fontSize: "32px",
+                  lineHeight: "40px",
+                }}
+              >
+                {d.count}
+              </div>
+              <div
+                className="card-sub"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 300,
+                  fontSize: "12px",
+                  opacity: 0.95,
+                  marginTop: "2px",
+                }}
+              >
+                {d.label}
+              </div>
+            </>
+          )}
         </motion.div>
-      ))}
-    </div>
-  );
-
-  const legend = (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: "center",
-        gap: "0.75rem 1.25rem",
-        fontFamily: "'Inter', sans-serif",
-        fontWeight: 300,
-        fontSize: "12px",
-        marginTop: "1rem",
-        color: "#74786E",
-      }}
-    >
-      {dist.map((d, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <div
-            style={{
-              width: "12px",
-              height: "12px",
-              backgroundColor: COLORS[i % COLORS.length],
-              borderRadius: "3px",
-            }}
-          />
-          <span style={{ whiteSpace: "nowrap" }}>
-            {d.label} ({d.count} / {d.percentage.toFixed(0)} %)
-          </span>
-        </div>
       ))}
     </div>
   );
@@ -123,11 +125,9 @@ export default function CardDistributionBar({ conf, data }: Props) {
       <div
         className="card-title"
         style={{
-          fontFamily: "'DM Sans', sans-serif",
-          fontWeight: 600,
-          fontSize: "14px",
+          textAlign: "center",
           color: "#74786E",
-          marginBottom: "8px",
+          marginBottom: "6px",
         }}
       >
         {conf.label}
@@ -135,17 +135,11 @@ export default function CardDistributionBar({ conf, data }: Props) {
 
       {bar}
 
-      {legend}
-
       <div
         className="card-sub"
         style={{
-          fontFamily: "'Inter', sans-serif",
-          fontWeight: 300,
-          fontSize: "12px",
-          opacity: 0.9,
           textAlign: "center",
-          marginTop: "0.75rem",
+          marginTop: "8px",
         }}
       >
         Gesamt: {data.total} Datensätze
