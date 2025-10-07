@@ -14,6 +14,7 @@ html, body {
   font-family: 'Inter', sans-serif;
   background: #FFFFFF; /* Softr Background */
   color: #74786E;      /* Softr Text */
+  overflow: visible !important; /* verhindert Abschneiden im Softr-Iframe */
 }
 
 /* Grid Layout */
@@ -21,6 +22,7 @@ html, body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
+  overflow: visible !important; /* erlaubt Schatten/Radius auch am Rand */
 }
 
 /* Widget-Karten */
@@ -30,6 +32,7 @@ html, body {
   text-align: center;
   box-shadow: 0 2px 10px rgba(0,0,0,.06);
   color: #FFFFFF; /* Text bleibt weiß, Hintergrund variiert */
+  overflow: visible;
 }
 
 /* Titel (Heading) → DM Sans Semibold */
@@ -60,3 +63,31 @@ html, body {
 .card.green  { background: #9EB384; } /* Softr Accent */
 .card.red    { background: #E57373; } /* Weiches Rot */
 .card.orange { background: #DA9D41; } /* Neues Orange */
+
+/* --------------------------------------------- */
+/* 🔧 Zusatz: sauberes Verhalten im Softr-Iframe  */
+/* --------------------------------------------- */
+
+/* Sorgt für sichtbaren Schatten und gleichmäßigen unteren Abstand */
+iframe,
+[data-iframe-overflowed],
+[data-iframe-size] {
+  overflow: visible !important;
+}
+
+/* Verhindert, dass Schatten abgeschnitten werden */
+.custom-code1-74e685d2-c393-4a85-814b-ccd869dc473d {
+  padding-bottom: 1rem !important;
+}
+
+/* Einheitlicher Abstand unten bei eingebetteten KPI- und Balken-Widgets */
+#kpi-root .card {
+  margin-bottom: 8px;
+}
+
+/* Sicherstellt, dass auch Container mit flex/iframe nicht clippen */
+[data-frame-overflow],
+[data-iframe-height] {
+  overflow: visible !important;
+  padding-bottom: 16px !important;
+}
