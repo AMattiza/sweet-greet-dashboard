@@ -33,17 +33,18 @@ const COLORS = [
 export default function CardDistributionBar({ conf, data }: Props) {
   const dist = data.distribution.slice(0, 8);
 
+  // 🎨 Balkenaufbau
   const bar = (
     <div
       style={{
         display: "flex",
         width: "100%",
-        height: "6.4rem", // leicht höher für mehr Präsenz
+        height: "6.4rem",
         borderRadius: "12px",
         overflow: "hidden",
         background: "#f6f6f6",
         boxShadow: "inset 0 0 6px rgba(0,0,0,0.05)",
-        marginBottom: "16px", // ⬅️ mehr Abstand zum unteren Kartenrand
+        marginBottom: "8px",
       }}
     >
       {dist.map((d, i) => {
@@ -70,51 +71,16 @@ export default function CardDistributionBar({ conf, data }: Props) {
           >
             {showFull ? (
               <>
-                <div
-                  className="card-title"
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "14px",
-                    marginBottom: "0px",
-                  }}
-                >
+                <div className="card-title" style={{ marginBottom: "0px" }}>
                   {d.percentage.toFixed(0)} %
                 </div>
-                <div
-                  className="card-value"
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "32px",
-                    lineHeight: "40px",
-                  }}
-                >
-                  {d.count}
-                </div>
-                <div
-                  className="card-sub"
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 300,
-                    fontSize: "12px",
-                    opacity: 0.95,
-                    marginTop: "2px",
-                  }}
-                >
+                <div className="card-value">{d.count}</div>
+                <div className="card-sub" style={{ marginTop: "2px" }}>
                   {d.label}
                 </div>
               </>
             ) : (
-              <div
-                className="card-value"
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontWeight: 600,
-                  fontSize: "20px",
-                  lineHeight: "24px",
-                }}
-              >
+              <div className="card-value" style={{ fontSize: "20px", lineHeight: "24px" }}>
                 {d.count}
               </div>
             )}
@@ -124,9 +90,11 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  const content = (
+  // 🧩 Inhalt der Karte
+  const card = (
     <div
       className="card"
+      data-iframe-overflowed=""
       style={{
         background: "#fff",
         color: "#74786E",
@@ -136,7 +104,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
         height: "100%",
         boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
         borderRadius: "12px",
-        padding: "18px 18px 32px", // ⬅️ mehr Raum unten für sauberen Abschluss
+        padding: "18px 18px 28px",
       }}
     >
       {/* Header */}
@@ -148,50 +116,39 @@ export default function CardDistributionBar({ conf, data }: Props) {
           marginBottom: "14px",
         }}
       >
-        <div
-          className="card-title"
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600,
-            fontSize: "14px",
-            color: "#74786E",
-          }}
-        >
-          {conf.label}
-        </div>
-
-        <div
-          className="card-sub"
-          style={{
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: 300,
-            fontSize: "12px",
-            opacity: 0.95,
-          }}
-        >
-          Gesamt: {data.total} Datensätze
-        </div>
+        <div className="card-title">{conf.label}</div>
+        <div className="card-sub">Gesamt: {data.total} Datensätze</div>
       </div>
 
       {bar}
     </div>
   );
 
-  return conf.target ? (
-    <a
-      href={conf.target}
-      target={conf.targetBlank === false ? "_self" : "_blank"}
-      rel="noreferrer"
-      style={{
-        textDecoration: "none",
-        display: "block",
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      {content}
-    </a>
-  ) : (
-    content
+  // 🔗 Wrapper mit KPI-Struktur
+  const wrapped = (
+    <div id="kpi-root" data-iframe-size="" data-iframe-overflowed="">
+      <div className="grid-container" data-iframe-overflowed="">
+        {conf.target ? (
+          <a
+            href={conf.target}
+            target={conf.targetBlank === false ? "_self" : "_blank"}
+            rel="noreferrer"
+            data-iframe-overflowed=""
+            style={{
+              textDecoration: "none",
+              display: "block",
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            {card}
+          </a>
+        ) : (
+          card
+        )}
+      </div>
+    </div>
   );
+
+  return wrapped;
 }
