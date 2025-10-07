@@ -38,12 +38,12 @@ export default function CardDistributionBar({ conf, data }: Props) {
       style={{
         display: "flex",
         width: "100%",
-        height: "6.2rem",
+        height: "6.4rem", // leicht höher für mehr Präsenz
         borderRadius: "12px",
         overflow: "hidden",
         background: "#f6f6f6",
         boxShadow: "inset 0 0 6px rgba(0,0,0,0.05)",
-        marginBottom: "6px", // ⬅️ zusätzlicher Abstand nach unten
+        marginBottom: "16px", // ⬅️ mehr Abstand zum unteren Kartenrand
       }}
     >
       {dist.map((d, i) => {
@@ -136,7 +136,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
         height: "100%",
         boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
         borderRadius: "12px",
-        padding: "16px 18px 28px", // ⬅️ unten mehr Luft
+        padding: "18px 18px 32px", // ⬅️ mehr Raum unten für sauberen Abschluss
       }}
     >
       {/* Header */}
@@ -145,7 +145,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "baseline",
-          marginBottom: "12px",
+          marginBottom: "14px",
         }}
       >
         <div
