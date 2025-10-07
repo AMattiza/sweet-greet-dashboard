@@ -7,6 +7,7 @@ type DistributionItem = {
   percentage: number;
 };
 
+
 type Props = {
   conf: {
     label: string;
