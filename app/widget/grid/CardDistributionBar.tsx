@@ -21,7 +21,7 @@ type Props = {
 
 const COLORS = [
   "#9EB384", // grün
-  "#FFD54F", // gelb
+  "#DA9D41", // gelb
   "#E57373", // rot
   "#64B5F6", // blau
   "#BA68C8", // violett
@@ -38,11 +38,11 @@ export default function CardDistributionBar({ conf, data }: Props) {
       style={{
         display: "flex",
         width: "100%",
-        height: "3rem", // 👉 höherer Balken für klare Lesbarkeit
-        borderRadius: "1rem",
+        height: "3.25rem", // gleiches optisches Gewicht wie Zahl (40px line-height)
+        borderRadius: "12px",
         overflow: "hidden",
-        background: "#f0f0f0",
-        boxShadow: "inset 0 0 4px rgba(0,0,0,0.15)",
+        background: "#f4f4f4",
+        boxShadow: "inset 0 0 4px rgba(0,0,0,0.08)",
       }}
     >
       {dist.map((d, i) => (
@@ -59,14 +59,15 @@ export default function CardDistributionBar({ conf, data }: Props) {
             alignItems: "center",
             justifyContent: "center",
             color: "#fff",
+            fontFamily: "'DM Sans', sans-serif",
             fontWeight: 600,
-            fontSize: "1.4rem", // gleiche Größe wie Hauptwerte in anderen Widgets
-            textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+            fontSize: "32px",        // exakt wie .card-value
+            lineHeight: "40px",
+            textShadow: "0 1px 2px rgba(0,0,0,0.25)",
             whiteSpace: "nowrap",
           }}
         >
-          {/* Zeigt Zahlen nur an, wenn Segment > 7 % Breite (Lesbarkeit) */}
-          {d.percentage >= 7 ? d.count : ""}
+          {d.percentage >= 8 ? d.count : ""}
         </motion.div>
       ))}
     </div>
@@ -79,23 +80,25 @@ export default function CardDistributionBar({ conf, data }: Props) {
         flexWrap: "wrap",
         justifyContent: "center",
         gap: "0.75rem 1.25rem",
-        fontSize: "0.9rem",
+        fontFamily: "'Inter', sans-serif",
+        fontWeight: 300,
+        fontSize: "12px",
         marginTop: "1rem",
-        color: "#444",
+        color: "#74786E",
       }}
     >
       {dist.map((d, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
           <div
             style={{
-              width: "14px",
-              height: "14px",
+              width: "12px",
+              height: "12px",
               backgroundColor: COLORS[i % COLORS.length],
               borderRadius: "3px",
             }}
           />
           <span style={{ whiteSpace: "nowrap" }}>
-            {d.label} ({d.count} / {d.percentage.toFixed(0)}%)
+            {d.label} ({d.count} / {d.percentage.toFixed(0)} %)
           </span>
         </div>
       ))}
@@ -107,24 +110,24 @@ export default function CardDistributionBar({ conf, data }: Props) {
       className="card"
       style={{
         background: "#fff",
-        color: "#333",
+        color: "#74786E",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
-        boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
-        borderRadius: "1rem",
-        padding: "1rem",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+        borderRadius: "12px",
+        padding: "18px",
       }}
     >
       <div
         className="card-title"
         style={{
-          textAlign: "center",
-          fontWeight: 700,
-          paddingBottom: "0.75rem",
-          fontSize: "1rem",
-          color: "#555",
+          fontFamily: "'DM Sans', sans-serif",
+          fontWeight: 600,
+          fontSize: "14px",
+          color: "#74786E",
+          marginBottom: "8px",
         }}
       >
         {conf.label}
@@ -135,11 +138,14 @@ export default function CardDistributionBar({ conf, data }: Props) {
       {legend}
 
       <div
+        className="card-sub"
         style={{
+          fontFamily: "'Inter', sans-serif",
+          fontWeight: 300,
+          fontSize: "12px",
+          opacity: 0.9,
           textAlign: "center",
-          fontSize: "0.85rem",
-          opacity: 0.6,
-          paddingTop: "0.75rem",
+          marginTop: "0.75rem",
         }}
       >
         Gesamt: {data.total} Datensätze
