@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     const list = searchParams.get("list");
     const field = searchParams.get("field") || undefined;
     const aggregate = searchParams.get("aggregate") || "first"; // first | sum | avg
-    const statusLogic = searchParams.get("statusLogic") || "tasks"; // NEU
+    const statusLogic = searchParams.get("statusLogic") || "tasks"; // tasks | pipeline | distribution | fixed*
 
     console.log("📊 KPI-Request:", {
       table,
@@ -44,11 +44,44 @@ export async function GET(req: Request) {
 
     console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
 
+    // Direkt alle Records zurückgeben, wenn explizit angefordert
     if (list) {
       return NextResponse.json({ records: recs });
     }
 
-    // Zähler & maxAge berechnen
+    // 🧮 Distribution-Widget-Logik
+    if (statusLogic === "distribution" && field) {
+      const groups: Record<string, number> = {};
+
+      for (const rec of recs) {
+        const key = rec.fields[field] || "Ohne Wert";
+        if (Array.isArray(key)) {
+          // Mehrfachauswahlfelder
+          for (const k of key) groups[k] = (groups[k] || 0) + 1;
+        } else {
+          groups[key] = (groups[key] || 0) + 1;
+        }
+      }
+
+      const total = Object.values(groups).reduce((a, b) => a + b, 0);
+      const distribution = Object.entries(groups)
+        .map(([label, count]) => ({
+          label,
+          count,
+          percentage: total ? (count / total) * 100 : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      console.log("📊 Distribution:", distribution);
+
+      return NextResponse.json({
+        type: "distribution",
+        total,
+        distribution,
+      });
+    }
+
+    // 🔢 Standard KPI-Berechnung
     let count = recs.length;
     let maxAgeDays = 0;
 
@@ -66,21 +99,14 @@ export async function GET(req: Request) {
       }
     }
 
-    // Statuslogik
+    // 🟢 Statuslogik
     let status: "green" | "amber" | "red" | "gray" = "amber";
 
     if (statusLogic === "tasks") {
-      if (count === 0) {
-        status = "green";
-      } else if (maxAgeDays > redDays) {
-        status = "red";
-      }
+      if (count === 0) status = "green";
+      else if (maxAgeDays > redDays) status = "red";
     } else if (statusLogic === "pipeline") {
-      if (count === 0) {
-        status = "red";
-      } else {
-        status = "green";
-      }
+      status = count === 0 ? "red" : "green";
     } else if (statusLogic === "fixedGreen") {
       status = "green";
     } else if (statusLogic === "fixedRed") {
@@ -89,7 +115,7 @@ export async function GET(req: Request) {
       status = "gray";
     }
 
-    // Feldwerte für Aggregationen
+    // 📈 Aggregationslogik
     let value: string | number | null = null;
     if (field && recs.length > 0) {
       const values = recs
@@ -110,13 +136,13 @@ export async function GET(req: Request) {
             ? nums.reduce((a, b) => a + b, 0) / nums.length
             : 0;
         } else {
-          // Standard: first
           value =
             typeof values[0] === "number" ? values[0] : String(values[0]);
         }
       }
     }
 
+    // ✅ Standard-Antwort
     return NextResponse.json({ count, maxAgeDays, status, value });
   } catch (err: any) {
     console.error("❌ API-Fehler:", err);
