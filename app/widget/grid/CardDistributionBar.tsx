@@ -36,21 +36,30 @@ export default function CardDistributionBar({ conf, data }: Props) {
   // 🎨 Prozentbalken
   const bar = (
     <div className="distribution-bar">
-      {dist.map((d, i) => (
-        <motion.div
-          key={d.label}
-          initial={{ width: 0 }}
-          animate={{ width: `${d.percentage}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          title={`${d.label}: ${d.count} (${d.percentage.toFixed(1)}%)`}
-          className="bar-segment"
-          style={{ backgroundColor: COLORS[i % COLORS.length] }}
-        >
-          <div className="segment-title">{d.percentage.toFixed(0)} %</div>
-          <div className="segment-value">{d.count}</div>
-          <div className="segment-sub">{d.label}</div>
-        </motion.div>
-      ))}
+      {dist.map((d, i) => {
+        const isSmall = d.percentage < 10; // nur Zahl bei <10%
+        return (
+          <motion.div
+            key={d.label}
+            initial={{ width: 0 }}
+            animate={{ width: `${d.percentage}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            title={`${d.label}: ${d.count} (${d.percentage.toFixed(1)}%)`}
+            className="bar-segment"
+            style={{ backgroundColor: COLORS[i % COLORS.length] }}
+          >
+            {isSmall ? (
+              <div className="segment-value small-only">{d.count}</div>
+            ) : (
+              <>
+                <div className="segment-title">{d.percentage.toFixed(0)} %</div>
+                <div className="segment-value">{d.count}</div>
+                <div className="segment-sub">{d.label}</div>
+              </>
+            )}
+          </motion.div>
+        );
+      })}
     </div>
   );
 
