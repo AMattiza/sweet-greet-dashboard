@@ -7,7 +7,6 @@ type DistributionItem = {
   percentage: number;
 };
 
-
 type Props = {
   conf: {
     label: string;
@@ -20,7 +19,6 @@ type Props = {
   };
 };
 
-// harmonische Farbpalette
 const COLORS = [
   "#9EB384", // grün
   "#FFD54F", // gelb
@@ -33,18 +31,18 @@ const COLORS = [
 ];
 
 export default function CardDistributionBar({ conf, data }: Props) {
-  const dist = data.distribution.slice(0, 8); // max 8 Segmente
+  const dist = data.distribution.slice(0, 8);
 
   const bar = (
     <div
       style={{
         display: "flex",
         width: "100%",
-        height: "1.5rem",
+        height: "3rem", // 👉 höherer Balken für klare Lesbarkeit
         borderRadius: "1rem",
         overflow: "hidden",
         background: "#f0f0f0",
-        boxShadow: "inset 0 0 3px rgba(0,0,0,0.1)",
+        boxShadow: "inset 0 0 4px rgba(0,0,0,0.15)",
       }}
     >
       {dist.map((d, i) => (
@@ -57,8 +55,19 @@ export default function CardDistributionBar({ conf, data }: Props) {
           style={{
             backgroundColor: COLORS[i % COLORS.length],
             height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontWeight: 600,
+            fontSize: "1.4rem", // gleiche Größe wie Hauptwerte in anderen Widgets
+            textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+            whiteSpace: "nowrap",
           }}
-        />
+        >
+          {/* Zeigt Zahlen nur an, wenn Segment > 7 % Breite (Lesbarkeit) */}
+          {d.percentage >= 7 ? d.count : ""}
+        </motion.div>
       ))}
     </div>
   );
@@ -70,25 +79,23 @@ export default function CardDistributionBar({ conf, data }: Props) {
         flexWrap: "wrap",
         justifyContent: "center",
         gap: "0.75rem 1.25rem",
-        fontSize: "0.85rem",
-        marginTop: "0.75rem",
+        fontSize: "0.9rem",
+        marginTop: "1rem",
+        color: "#444",
       }}
     >
       {dist.map((d, i) => (
-        <div
-          key={i}
-          style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
-        >
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
           <div
             style={{
-              width: "12px",
-              height: "12px",
+              width: "14px",
+              height: "14px",
               backgroundColor: COLORS[i % COLORS.length],
               borderRadius: "3px",
             }}
           />
           <span style={{ whiteSpace: "nowrap" }}>
-            {d.label} ({d.percentage.toFixed(0)}%)
+            {d.label} ({d.count} / {d.percentage.toFixed(0)}%)
           </span>
         </div>
       ))}
@@ -105,15 +112,17 @@ export default function CardDistributionBar({ conf, data }: Props) {
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
+        borderRadius: "1rem",
+        padding: "1rem",
       }}
     >
       <div
         className="card-title"
         style={{
           textAlign: "center",
-          fontWeight: 600,
-          paddingTop: "0.5rem",
+          fontWeight: 700,
+          paddingBottom: "0.75rem",
           fontSize: "1rem",
           color: "#555",
         }}
@@ -121,16 +130,16 @@ export default function CardDistributionBar({ conf, data }: Props) {
         {conf.label}
       </div>
 
-      <div style={{ padding: "0.5rem 1rem" }}>{bar}</div>
+      {bar}
 
       {legend}
 
       <div
         style={{
           textAlign: "center",
-          fontSize: "0.8rem",
+          fontSize: "0.85rem",
           opacity: 0.6,
-          paddingBottom: "0.5rem",
+          paddingTop: "0.75rem",
         }}
       >
         Gesamt: {data.total} Datensätze
