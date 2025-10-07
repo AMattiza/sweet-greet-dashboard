@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     const list = searchParams.get("list");
     const field = searchParams.get("field") || undefined;
     const aggregate = searchParams.get("aggregate") || "first"; // first | sum | avg
-    const statusLogic = searchParams.get("statusLogic") || "tasks"; // tasks | pipeline | distribution | fixed*
+    const statusLogic = searchParams.get("statusLogic") || "tasks"; // tasks | pipeline | distribution-bar | fixed*
 
     console.log("📊 KPI-Request:", {
       table,
@@ -49,16 +49,17 @@ export async function GET(req: Request) {
       return NextResponse.json({ records: recs });
     }
 
-    // 🧮 Distribution-Widget-Logik
-    if (statusLogic === "distribution" && field) {
+    // 🟩 NEU: Distribution-Widgets (für Balken oder Diagramme)
+    if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && field) {
       const groups: Record<string, number> = {};
 
       for (const rec of recs) {
-        const key = rec.fields[field] || "Ohne Wert";
-        if (Array.isArray(key)) {
-          // Mehrfachauswahlfelder
-          for (const k of key) groups[k] = (groups[k] || 0) + 1;
+        const val = rec.fields[field];
+        if (Array.isArray(val)) {
+          // Mehrfachauswahlfeld
+          for (const v of val) groups[v] = (groups[v] || 0) + 1;
         } else {
+          const key = val || "Ohne Wert";
           groups[key] = (groups[key] || 0) + 1;
         }
       }
@@ -72,7 +73,7 @@ export async function GET(req: Request) {
         }))
         .sort((a, b) => b.count - a.count);
 
-      console.log("📊 Distribution:", distribution);
+      console.log("📊 Distribution-Ergebnis:", distribution);
 
       return NextResponse.json({
         type: "distribution",
