@@ -33,16 +33,17 @@ const COLORS = [
 export default function CardDistributionBar({ conf, data }: Props) {
   const dist = data.distribution.slice(0, 8);
 
+  // --- Hauptbalken ---
   const bar = (
     <div
       style={{
         display: "flex",
         width: "100%",
-        height: "4.5rem",
+        height: "6.5rem", // gleiche optische Höhe wie KPI-Widgets
         borderRadius: "12px",
         overflow: "hidden",
         background: "#f4f4f4",
-        boxShadow: "inset 0 0 4px rgba(0,0,0,0.08)",
+        boxShadow: "inset 0 0 6px rgba(0,0,0,0.08)",
       }}
     >
       {dist.map((d, i) => (
@@ -62,6 +63,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
             color: "#fff",
             textShadow: "0 1px 2px rgba(0,0,0,0.3)",
             whiteSpace: "nowrap",
+            padding: "4px",
           }}
         >
           {d.percentage >= 7 && (
@@ -107,6 +109,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
+  // --- Hauptkarte ---
   const content = (
     <div
       className="card"
@@ -123,30 +126,43 @@ export default function CardDistributionBar({ conf, data }: Props) {
       }}
     >
       <div
-        className="card-title"
         style={{
-          textAlign: "center",
-          color: "#74786E",
-          marginBottom: "6px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          marginBottom: "8px",
         }}
       >
-        {conf.label}
+        <div
+          className="card-title"
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 600,
+            fontSize: "14px",
+            color: "#74786E",
+          }}
+        >
+          {conf.label}
+        </div>
+
+        <div
+          className="card-sub"
+          style={{
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 300,
+            fontSize: "12px",
+            opacity: 0.95,
+          }}
+        >
+          Gesamt: {data.total} Datensätze
+        </div>
       </div>
 
       {bar}
-
-      <div
-        className="card-sub"
-        style={{
-          textAlign: "center",
-          marginTop: "8px",
-        }}
-      >
-        Gesamt: {data.total} Datensätze
-      </div>
     </div>
   );
 
+  // --- klickbar machen ---
   return conf.target ? (
     <a
       href={conf.target}
