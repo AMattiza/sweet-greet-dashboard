@@ -33,83 +33,96 @@ const COLORS = [
 export default function CardDistributionBar({ conf, data }: Props) {
   const dist = data.distribution.slice(0, 8);
 
-  // --- Hauptbalken ---
   const bar = (
     <div
       style={{
         display: "flex",
         width: "100%",
-        height: "6.5rem", // gleiche optische Höhe wie KPI-Widgets
+        height: "6.2rem", // Höhe angepasst an KPI-Karten
         borderRadius: "12px",
         overflow: "hidden",
-        background: "#f4f4f4",
-        boxShadow: "inset 0 0 6px rgba(0,0,0,0.08)",
+        background: "#f6f6f6",
+        boxShadow: "inset 0 0 6px rgba(0,0,0,0.05)",
       }}
     >
-      {dist.map((d, i) => (
-        <motion.div
-          key={d.label}
-          initial={{ width: 0 }}
-          animate={{ width: `${d.percentage}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          title={`${d.label}: ${d.count} (${d.percentage.toFixed(1)}%)`}
-          style={{
-            backgroundColor: COLORS[i % COLORS.length],
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            color: "#fff",
-            textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-            whiteSpace: "nowrap",
-            padding: "4px",
-          }}
-        >
-          {d.percentage >= 7 && (
-            <>
-              <div
-                className="card-title"
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  marginBottom: "0px",
-                }}
-              >
-                {d.percentage.toFixed(0)} %
-              </div>
+      {dist.map((d, i) => {
+        const showFull = d.percentage >= 7;
+        return (
+          <motion.div
+            key={d.label}
+            initial={{ width: 0 }}
+            animate={{ width: `${d.percentage}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            title={`${d.label}: ${d.count} (${d.percentage.toFixed(1)}%)`}
+            style={{
+              backgroundColor: COLORS[i % COLORS.length],
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "#fff",
+              textShadow: "0 1px 2px rgba(0,0,0,0.25)",
+              whiteSpace: "nowrap",
+              padding: "6px 4px",
+            }}
+          >
+            {showFull ? (
+              <>
+                <div
+                  className="card-title"
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    marginBottom: "0px",
+                  }}
+                >
+                  {d.percentage.toFixed(0)} %
+                </div>
+                <div
+                  className="card-value"
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                    fontSize: "32px",
+                    lineHeight: "40px",
+                  }}
+                >
+                  {d.count}
+                </div>
+                <div
+                  className="card-sub"
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 300,
+                    fontSize: "12px",
+                    opacity: 0.95,
+                    marginTop: "2px",
+                  }}
+                >
+                  {d.label}
+                </div>
+              </>
+            ) : (
               <div
                 className="card-value"
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
                   fontWeight: 600,
-                  fontSize: "32px",
-                  lineHeight: "40px",
+                  fontSize: "20px",
+                  lineHeight: "24px",
                 }}
               >
                 {d.count}
               </div>
-              <div
-                className="card-sub"
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 300,
-                  fontSize: "12px",
-                  opacity: 0.95,
-                  marginTop: "2px",
-                }}
-              >
-                {d.label}
-              </div>
-            </>
-          )}
-        </motion.div>
-      ))}
+            )}
+          </motion.div>
+        );
+      })}
     </div>
   );
 
-  // --- Hauptkarte ---
   const content = (
     <div
       className="card"
@@ -118,19 +131,20 @@ export default function CardDistributionBar({ conf, data }: Props) {
         color: "#74786E",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
         height: "100%",
         boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
         borderRadius: "12px",
-        padding: "18px",
+        padding: "16px 18px 20px", // oben weniger, unten mehr
       }}
     >
+      {/* Header */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "baseline",
-          marginBottom: "8px",
+          marginBottom: "10px",
         }}
       >
         <div
@@ -162,7 +176,6 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // --- klickbar machen ---
   return conf.target ? (
     <a
       href={conf.target}
