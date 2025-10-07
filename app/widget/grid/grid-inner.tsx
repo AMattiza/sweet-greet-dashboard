@@ -2,6 +2,7 @@
 import "./grid.css";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import CardDistribution from "./CardDistribution"; // 👉 NEU für Balkenwidgets
 
 type KPIConf = {
   label: string;
@@ -21,20 +22,33 @@ type KPIConf = {
   logicType?: string;
   statusLogic?: string;
   field?: string;
-
-  // 👉 NEU für Pipeline-Widgets
-  leadTarget?: string;       // Zielwert, z.B. "10"
-  leadThreshold?: string;    // Mindestwert, z.B. "5"
+  leadTarget?: string;
+  leadThreshold?: string;
 };
 
-type ApiResp = {
-  count: number;
-  maxAgeDays: number;
-  status: "green" | "amber" | "red" | "gray";
-  value?: string | number | null;
-};
+type ApiResp =
+  | {
+      count: number;
+      maxAgeDays: number;
+      status: "green" | "amber" | "red" | "gray";
+      value?: string | number | null;
+    }
+  | {
+      type: "distribution";
+      total: number;
+      distribution: {
+        label: string;
+        count: number;
+        percentage: number;
+      }[];
+    };
 
-function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string }) {
+function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
+  // 👉 Wenn es ein Distribution-Widget ist, spezielle Darstellung:
+  if (data?.type === "distribution") {
+    return <CardDistribution conf={conf} data={data} />;
+  }
+
   const simpleMode = conf.logicType === "Nur zählen";
 
   const parseNum = (val?: string) => {
@@ -47,7 +61,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
   const leadThreshold = parseNum(conf.leadThreshold);
 
   // --- Hintergrundfarbe ---
-  let bg = "#FFD54F"; // default gelb
+  let bg = "#FFD54F"; // Standard gelb
   if (conf.statusLogic === "pipeline" && data && leadTarget && leadThreshold) {
     if (data.count < leadThreshold) {
       bg = "#E57373"; // rot
@@ -79,17 +93,16 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
       } else {
         sub = `Ziel von ${leadTarget} erreicht`;
       }
-    } else {
-      if (conf.showDateInfo !== false) {
-        if (data.status === "green") sub = "Alles erledigt";
-        else if (data.status === "red") sub = `Älteste offen: ${data.maxAgeDays} Tage`;
-        else if (data.status !== "gray") sub = `Offene: bis ${data.maxAgeDays} Tage`;
-      }
+    } else if (conf.showDateInfo !== false) {
+      if (data.status === "green") sub = "Alles erledigt";
+      else if (data.status === "red") sub = `Älteste offen: ${data.maxAgeDays} Tage`;
+      else if (data.status !== "gray") sub = `Offene: bis ${data.maxAgeDays} Tage`;
     }
   }
 
   // --- Value ---
-  let valueDisplay: string | number = err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
+  let valueDisplay: string | number =
+    err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
   if (!err && data && data.value !== undefined && data.value !== null) {
     if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
       valueDisplay = `€${data.value.toFixed(2)}`;
@@ -113,7 +126,12 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: ApiResp; err?: string
       href={conf.target}
       target={conf.targetBlank === false ? "_self" : "_blank"}
       rel="noreferrer"
-      style={{ textDecoration: "none", display: "block", width: "100%", height: "100%" }}
+      style={{
+        textDecoration: "none",
+        display: "block",
+        width: "100%",
+        height: "100%",
+      }}
     >
       {card}
     </a>
@@ -126,7 +144,9 @@ export default function GridInner() {
   const sp = useSearchParams();
   const presetKey = sp.get("preset") || "vertrieb";
 
-  const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
+  const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>(
+    []
+  );
   const [confs, setConfs] = useState<KPIConf[]>([]);
 
   // Widgets laden
@@ -135,13 +155,20 @@ export default function GridInner() {
       .then((r) => r.json())
       .then((data: KPIConf[]) => {
         if (!Array.isArray(data) || !data.length) {
-          setItems([{ conf: { label: "Config fehlt", table: "—" }, err: "config oder preset ungültig" }]);
+          setItems([
+            {
+              conf: { label: "Config fehlt", table: "—" },
+              err: "config oder preset ungültig",
+            },
+          ]);
           return;
         }
         setConfs(data);
       })
       .catch((e) => {
-        setItems([{ conf: { label: "Fehler beim Laden", table: "—" }, err: String(e) }]);
+        setItems([
+          { conf: { label: "Fehler beim Laden", table: "—" }, err: String(e) },
+        ]);
       });
   }, [presetKey]);
 
@@ -163,10 +190,14 @@ export default function GridInner() {
       fetch(u.toString())
         .then((r) => r.json())
         .then((data: ApiResp) =>
-          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, data } : p)))
+          setItems((prev) =>
+            prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
+          )
         )
         .catch((e) =>
-          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p)))
+          setItems((prev) =>
+            prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p))
+          )
         );
     });
   }, [confs]);
