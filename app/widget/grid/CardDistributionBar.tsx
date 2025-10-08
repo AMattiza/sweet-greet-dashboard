@@ -33,7 +33,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
   const bar = (
     <div className="distribution-bar">
       {dist.map((d, i) => {
-        const isSmall = d.percentage < 10; // nur Zahl bei <10%
+        const isSmall = d.percentage < 10;
         return (
           <motion.div
             key={d.label}
@@ -59,7 +59,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🧩 Inhalt (Container)
+  // 🧩 Hauptinhalt (Karte)
   const content = (
     <div className="distribution-card">
       <div className="distribution-header">
@@ -70,29 +70,22 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🔗 Integration ins KPI-Grid
-  return (
-    <div id="kpi-root" data-iframe-size="" data-iframe-overflowed="">
-      <div className="grid-container" data-iframe-overflowed="">
-        {conf.target ? (
-          <a
-            href={conf.target}
-            target={conf.targetBlank === false ? "_self" : "_blank"}
-            rel="noreferrer"
-            data-iframe-overflowed=""
-            style={{
-              textDecoration: "none",
-              display: "block",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            {content}
-          </a>
-        ) : (
-          content
-        )}
-      </div>
-    </div>
+  // 🔗 Falls Link vorhanden → klickbare Karte
+  return conf.target ? (
+    <a
+      href={conf.target}
+      target={conf.targetBlank === false ? "_self" : "_blank"}
+      rel="noreferrer"
+      style={{
+        textDecoration: "none",
+        display: "block",
+        width: "100%",
+        height: "100%",
+      }}
+    >
+      {content}
+    </a>
+  ) : (
+    content
   );
 }
