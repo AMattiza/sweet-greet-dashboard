@@ -16,9 +16,9 @@ html, body {
   padding: 16px;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
-  background: #FFFFFF; /* Softr Background */
-  color: #74786E;      /* Softr Text */
-  overflow: visible !important; /* verhindert Abschneiden im Softr-Iframe */
+  background: #FFFFFF;
+  color: #74786E;
+  overflow: visible !important;
 }
 
 /* =============================
@@ -28,7 +28,7 @@ html, body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  overflow: visible !important; /* erlaubt Schatten/Radius auch am Rand */
+  overflow: visible !important;
 }
 
 /* =============================
@@ -41,6 +41,7 @@ html, body {
   box-shadow: 0 2px 10px rgba(0,0,0,.06);
   color: #FFFFFF;
   overflow: visible;
+  background: #fff;
 }
 
 .card-title {
@@ -48,6 +49,7 @@ html, body {
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 6px;
+  color: #74786E;
 }
 
 .card-value {
@@ -62,6 +64,7 @@ html, body {
   font-weight: 300;
   font-size: 12px;
   opacity: .95;
+  color: #74786E;
 }
 
 /* Status-Farben */
@@ -83,8 +86,7 @@ iframe,
   padding-bottom: 1rem !important;
 }
 
-#kpi-root .card,
-#kpi-root .distribution-card {
+#kpi-root .card {
   margin-bottom: 8px;
 }
 
@@ -95,27 +97,19 @@ iframe,
 }
 
 /* =============================
-   DISTRIBUTION CARD – GLASS EFFECT
+   DISTRIBUTION WIDGET – KPI STYLE
 ============================= */
-.distribution-card {
-  background: rgba(255, 255, 255, 0.6); /* halbtransparentes Weiß */
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+.distribution-widget {
   border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  background: #fff;
   color: #74786E;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  padding: 18px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease;
-}
-
-.distribution-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.7); /* leicht heller beim Hover */
+  overflow: visible;
 }
 
 .distribution-header {
