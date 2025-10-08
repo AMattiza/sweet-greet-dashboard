@@ -1,6 +1,7 @@
 "use client";
 import { Suspense } from "react";
 import Script from "next/script";
+import "./grid.css";
 import GridInner from "./grid-inner";
 
 function GridPageContent() {
