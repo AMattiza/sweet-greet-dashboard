@@ -59,7 +59,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🧩 Widget wie KPI-Card
+  // 🧩 Direkt wie KPI-Card darstellen (ohne inneren Wrapper)
   const content = (
     <div className="card distribution-widget">
       <div className="distribution-header">
