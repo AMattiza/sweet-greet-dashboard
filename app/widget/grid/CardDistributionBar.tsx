@@ -59,8 +59,8 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🧩 Direkt wie KPI-Card darstellen (ohne inneren Wrapper)
-  const content = (
+  // 🧩 Der Balken selbst ist jetzt die KPI-Card
+  const card = (
     <div className="card distribution-widget">
       <div className="distribution-header">
         <div className="card-title">{conf.label}</div>
@@ -70,7 +70,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🔗 Optional klickbar
+  // 🔗 Klickbar, falls Ziel vorhanden
   return conf.target ? (
     <a
       href={conf.target}
@@ -84,9 +84,9 @@ export default function CardDistributionBar({ conf, data }: Props) {
         color: "inherit",
       }}
     >
-      {content}
+      {card}
     </a>
   ) : (
-    content
+    card
   );
 }
