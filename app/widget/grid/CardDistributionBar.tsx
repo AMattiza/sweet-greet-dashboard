@@ -48,7 +48,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
               <div className="segment-value small-only">{d.count}</div>
             ) : (
               <>
-                <div className="segment-title">{d.percentage.toFixed(0)} %</div>
+                <div className="segment-title">{d.percentage.toFixed(0)}%</div>
                 <div className="segment-value">{d.count}</div>
                 <div className="segment-sub">{d.label}</div>
               </>
@@ -59,7 +59,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🧩 Widget-Inhalt (KPI-Stil)
+  // 🧩 Widget wie KPI-Card
   const content = (
     <div className="card distribution-widget">
       <div className="distribution-header">
@@ -70,7 +70,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🔗 Klickbar oder nicht
+  // 🔗 Optional klickbar
   return conf.target ? (
     <a
       href={conf.target}
