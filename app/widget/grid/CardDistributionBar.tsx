@@ -59,9 +59,9 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🧩 Hauptinhalt (Karte)
+  // 🧩 Karte im KPI-Stil (wie KPI Widgets)
   const content = (
-    <div className="distribution-card">
+    <div className="card distribution-widget">
       <div className="distribution-header">
         <div className="card-title">{conf.label}</div>
         <div className="card-sub">Gesamt: {data.total} Datensätze</div>
@@ -70,7 +70,7 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
-  // 🔗 Falls Link vorhanden → klickbare Karte
+  // 🔗 Falls klickbar
   return conf.target ? (
     <a
       href={conf.target}
