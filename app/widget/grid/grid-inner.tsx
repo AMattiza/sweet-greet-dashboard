@@ -45,10 +45,10 @@ type ApiResp =
     };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
-  // 👉 Spezial-Widgets erkennen
+  // 👉 Spezialfall: Distribution-Widgets direkt im Grid rendern (ohne zusätzlichen Card-Wrapper)
   if (data?.type === "distribution") {
-    // Wenn das Widget Distribution ist – prüfen, ob Bar-Style genutzt werden soll
     const useBar = conf.statusLogic === "distribution-bar";
+    // ⚠️ Kein zusätzliches div.card drumherum!
     return useBar ? (
       <CardDistributionBar conf={conf} data={data} />
     ) : (
@@ -56,6 +56,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     );
   }
 
+  // --- Normale KPI-Widgets ---
   const simpleMode = conf.logicType === "Nur zählen";
 
   const parseNum = (val?: string) => {
@@ -70,13 +71,9 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
   // --- Hintergrundfarbe ---
   let bg = "#FFD54F"; // Standard gelb
   if (conf.statusLogic === "pipeline" && data && leadTarget && leadThreshold) {
-    if (data.count < leadThreshold) {
-      bg = "#E57373"; // rot
-    } else if (data.count < leadTarget) {
-      bg = "#FFD54F"; // orange
-    } else {
-      bg = "#9EB384"; // grün
-    }
+    if (data.count < leadThreshold) bg = "#E57373";
+    else if (data.count < leadTarget) bg = "#FFD54F";
+    else bg = "#9EB384";
   } else if (simpleMode) {
     bg = "#f4f4f4";
   } else {
@@ -88,18 +85,14 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
 
   // --- Subtext ---
   let sub = "";
-  if (err) {
-    sub = err;
-  } else if (!data) {
-    sub = "Lade...";
-  } else if (!simpleMode) {
+  if (err) sub = err;
+  else if (!data) sub = "Lade...";
+  else if (!simpleMode) {
     if (conf.statusLogic === "pipeline" && leadTarget && leadThreshold) {
       if (data.count < leadTarget) {
         const diff = leadTarget - data.count;
         sub = `Noch ${diff} bis zum Ziel von ${leadTarget} Leads`;
-      } else {
-        sub = `Ziel von ${leadTarget} erreicht`;
-      }
+      } else sub = `Ziel von ${leadTarget} erreicht`;
     } else if (conf.showDateInfo !== false) {
       if (data.status === "green") sub = "Alles erledigt";
       else if (data.status === "red") sub = `Älteste offen: ${data.maxAgeDays} Tage`;
@@ -108,8 +101,12 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
   }
 
   // --- Value ---
-  let valueDisplay: string | number =
-    err ? "!" : data ? (data.value ?? data.count ?? "…") : "…";
+  let valueDisplay: string | number = err
+    ? "!"
+    : data
+    ? data.value ?? data.count ?? "…"
+    : "…";
+
   if (!err && data && data.value !== undefined && data.value !== null) {
     if (typeof data.value === "number" && conf.label.toLowerCase().includes("kosten")) {
       valueDisplay = `€${data.value.toFixed(2)}`;
@@ -127,7 +124,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     </div>
   );
 
-  // 👉 Klickbarer Wrapper
+  // --- Klickbarer Wrapper ---
   return conf.target ? (
     <a
       href={conf.target}
