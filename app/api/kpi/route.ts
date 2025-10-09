@@ -42,6 +42,18 @@ export async function GET(req: Request) {
       fields: field ? [field] : undefined,
     });
 
+    // 🛡️ Fallback: Keine oder ungültige Antwort
+    if (!recs || !Array.isArray(recs)) {
+      console.warn("⚠️ Keine Records empfangen – vermutlich Fehler in Formel:", formula);
+      return NextResponse.json({
+        count: 0,
+        maxAgeDays: 0,
+        status: "gray",
+        value: null,
+        debug: { table, view, formula, found: 0 },
+      });
+    }
+
     console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
 
     // Direkt alle Records zurückgeben, wenn explizit angefordert
@@ -49,14 +61,13 @@ export async function GET(req: Request) {
       return NextResponse.json({ records: recs });
     }
 
-    // 🟩 NEU: Distribution-Widgets (für Balken oder Diagramme)
+    // 🟩 Distribution Widgets (Balken oder Diagramm)
     if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && field) {
       const groups: Record<string, number> = {};
 
       for (const rec of recs) {
         const val = rec.fields[field];
         if (Array.isArray(val)) {
-          // Mehrfachauswahlfeld
           for (const v of val) groups[v] = (groups[v] || 0) + 1;
         } else {
           const key = val || "Ohne Wert";
@@ -79,6 +90,7 @@ export async function GET(req: Request) {
         type: "distribution",
         total,
         distribution,
+        debug: { table, view, formula, found: recs.length },
       });
     }
 
@@ -92,15 +104,13 @@ export async function GET(req: Request) {
         const dVal = rec.fields[dateField];
         if (dVal) {
           const d = new Date(dVal as string);
-          const diff = Math.floor(
-            (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)
-          );
+          const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
           if (diff > maxAgeDays) maxAgeDays = diff;
         }
       }
     }
 
-    // 🟢 Statuslogik
+    // 🧭 Statuslogik
     let status: "green" | "amber" | "red" | "gray" = "amber";
 
     if (statusLogic === "tasks") {
@@ -130,21 +140,24 @@ export async function GET(req: Request) {
             0
           );
         } else if (aggregate === "avg") {
-          const nums = values.filter(
-            (v) => typeof v === "number"
-          ) as number[];
+          const nums = values.filter((v) => typeof v === "number") as number[];
           value = nums.length
             ? nums.reduce((a, b) => a + b, 0) / nums.length
             : 0;
         } else {
-          value =
-            typeof values[0] === "number" ? values[0] : String(values[0]);
+          value = typeof values[0] === "number" ? values[0] : String(values[0]);
         }
       }
     }
 
     // ✅ Standard-Antwort
-    return NextResponse.json({ count, maxAgeDays, status, value });
+    return NextResponse.json({
+      count,
+      maxAgeDays,
+      status,
+      value,
+      debug: { table, view, formula, found: recs.length },
+    });
   } catch (err: any) {
     console.error("❌ API-Fehler:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
