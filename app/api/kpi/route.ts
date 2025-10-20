@@ -61,38 +61,48 @@ export async function GET(req: Request) {
       return NextResponse.json({ records: recs });
     }
 
-    // 🟩 Distribution Widgets (Balken oder Diagramm)
-    if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && field) {
-      const groups: Record<string, number> = {};
+    // 🟩 Erweiterte Distribution-Bar: unterstützt mehrere Felder (z. B. "Lagerbestand,Gesamtverbrauch")
+if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && field) {
+  const fieldList = field.split(",").map(f => f.trim()).filter(Boolean);
+  const groups: Record<string, number> = {};
 
-      for (const rec of recs) {
-        const val = rec.fields[field];
-        if (Array.isArray(val)) {
-          for (const v of val) groups[v] = (groups[v] || 0) + 1;
-        } else {
-          const key = val || "Ohne Wert";
-          groups[key] = (groups[key] || 0) + 1;
-        }
+  for (const rec of recs) {
+    for (const f of fieldList) {
+      const val = rec.fields[f];
+
+      if (val === undefined || val === null) continue;
+
+      if (typeof val === "number") {
+        // numerische Felder → aufsummieren
+        groups[f] = (groups[f] || 0) + val;
+      } else if (Array.isArray(val)) {
+        // Mehrfachauswahl-Felder → Einträge zählen
+        for (const v of val) groups[v] = (groups[v] || 0) + 1;
+      } else if (typeof val === "string" && val.trim() !== "") {
+        // Textfeld → Kategorien zählen
+        groups[val.trim()] = (groups[val.trim()] || 0) + 1;
       }
-
-      const total = Object.values(groups).reduce((a, b) => a + b, 0);
-      const distribution = Object.entries(groups)
-        .map(([label, count]) => ({
-          label,
-          count,
-          percentage: total ? (count / total) * 100 : 0,
-        }))
-        .sort((a, b) => b.count - a.count);
-
-      console.log("📊 Distribution-Ergebnis:", distribution);
-
-      return NextResponse.json({
-        type: "distribution",
-        total,
-        distribution,
-        debug: { table, view, formula, found: recs.length },
-      });
     }
+  }
+
+  const total = Object.values(groups).reduce((a, b) => a + b, 0);
+  const distribution = Object.entries(groups)
+    .map(([label, count]) => ({
+      label,
+      count,
+      percentage: total ? (count / total) * 100 : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  console.log("📊 Distribution (multi-field) Ergebnis:", distribution);
+
+  return NextResponse.json({
+    type: "distribution",
+    total,
+    distribution,
+    debug: { table, view, formula, fields: fieldList, found: recs.length },
+  });
+}
 
     // 🔢 Standard KPI-Berechnung
     let count = recs.length;
