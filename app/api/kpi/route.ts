@@ -163,7 +163,7 @@ if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && fi
       }
     }
 
-    // ✅ Standard Antwort
+    // ✅ Standard-Antwort
     return NextResponse.json({
       count,
       maxAgeDays,
