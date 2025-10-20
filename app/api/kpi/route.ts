@@ -63,7 +63,7 @@ export async function GET(req: Request) {
 
     // 🟩 Erweiterte Distribution-Bar: unterstützt mehrere Felder (z. B. "Lagerbestand,Gesamtverbrauch")
 if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && field) {
-  const fieldList = field.split(",").map(f => f.trim()).filter(Boolean);
+  const fieldList = field.split(";").map(f => f.trim()).filter(Boolean);
   const groups: Record<string, number> = {};
 
   for (const rec of recs) {
