@@ -69,11 +69,19 @@ export default function CardDistributionBar({ conf, data, loading }: Props) {
     </div>
   );
 
-  // 🧩 Der Balken selbst ist jetzt die KPI-Card
+  // 🧩 Das Distribution-Widget selbst
   const card = (
     <div
       className="card distribution-widget transition-all duration-300 min-h-[180px] md:min-h-[200px]"
-      style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        width: "100%",
+        maxWidth: "1122px",      // <- entscheidend: erzwingt gleiche Breite wie Grid
+        margin: "0 auto",        // <- exakt zentriert im Grid
+        boxSizing: "border-box", // <- verhindert interne Differenzen
+      }}
     >
       <div className="distribution-header">
         <div className="card-title">{conf.label}</div>
