@@ -45,7 +45,7 @@ type ApiResp =
     };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
-  // 👉 Spezialfall: Distribution-Widgets direkt rendern
+  // 👉 Spezialfall: Distribution Widgets
   if (data?.type === "distribution") {
     const useBar = conf.statusLogic === "distribution-bar";
     return useBar ? (
@@ -55,6 +55,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     );
   }
 
+  // --- Standard Widgets ---
   const simpleMode = conf.logicType === "Nur zählen";
 
   const parseNum = (val?: string) => {
@@ -141,9 +142,11 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
 export default function GridInner() {
   const sp = useSearchParams();
   const presetKey = sp.get("preset") || "vertrieb";
+
   const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
   const [confs, setConfs] = useState<KPIConf[]>([]);
 
+  // Widgets-Konfiguration laden
   useEffect(() => {
     fetch(`/api/widgets?preset=${presetKey}`)
       .then((r) => r.json())
@@ -159,6 +162,7 @@ export default function GridInner() {
       });
   }, [presetKey]);
 
+  // KPI-Daten laden
   useEffect(() => {
     if (!confs.length) return;
     setItems(confs.map((c) => ({ conf: c })));
@@ -176,31 +180,34 @@ export default function GridInner() {
       fetch(u.toString())
         .then((r) => r.json())
         .then((data: ApiResp) =>
-          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, data } : p)))
+          setItems((prev) =>
+            prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
+          )
         )
         .catch((e) =>
-          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p)))
+          setItems((prev) =>
+            prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p))
+          )
         );
     });
   }, [confs]);
 
+  // 🧱 Einheitliches Grid + Sonderbehandlung für Distribution-Bar
   return (
     <div id="kpi-root" data-iframe-height>
-      {items.map((it, idx) => {
-        const isDistribution =
-          it.conf.statusLogic === "distribution" || it.conf.statusLogic === "distribution-bar";
+      <div className="grid-container">
+        {items.map((it, idx) => {
+          const isDistribution =
+            it.conf.statusLogic === "distribution" ||
+            it.conf.statusLogic === "distribution-bar";
 
-        // ⚠️ Keine doppelte grid-container-Umhüllung für Distribution-Widgets
-        if (isDistribution) {
-          return <Card key={idx} {...it} />;
-        }
-
-        return (
-          <div key={idx} className="grid-container">
-            <Card {...it} />
-          </div>
-        );
-      })}
+          return (
+            <div key={idx} className={isDistribution ? "grid-item-full" : "grid-item"}>
+              <Card {...it} />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
