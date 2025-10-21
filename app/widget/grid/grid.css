@@ -7,6 +7,7 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 0;
+  background: transparent !important; /* kein weißer Seitenhintergrund */
 }
 
 *,
@@ -20,9 +21,12 @@ html, body {
 ============================= */
 #kpi-root {
   padding: 0 !important;
+  margin: 0 !important;
   font-family: 'Inter', sans-serif;
-  background: #FFFFFF;
+  background: transparent !important;   /* entfernt weißen Container */
   color: #74786E;
+  box-shadow: none !important;
+  border: none !important;
   overflow: visible !important;
 }
 
@@ -34,10 +38,11 @@ html, body {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
   width: 100%;
-  max-width: 1122px;  /* Einheitliche Maximalbreite */
-  margin: 0 auto;     /* Zentriert */
-  padding: 16px;
-  overflow: visible !important;
+  max-width: 1122px;
+  margin: 0 auto;
+  padding: 0;                     /* kein Innenabstand */
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* =============================
@@ -52,13 +57,13 @@ html, body {
 }
 
 /* ======================================
-   🔧 Distribution-Wrapper für exakte Breite
+   Distribution-Wrapper für exakte Breite
 ====================================== */
 .distribution-wrapper {
   display: flex;
-  justify-content: center;   /* Zentriert die Karte horizontal */
+  justify-content: center;
   align-items: stretch;
-  grid-column: 1 / -1;       /* Nimmt gesamte Grid-Breite ein */
+  grid-column: 1 / -1;
 }
 
 /* =============================
@@ -70,6 +75,7 @@ html, body {
   text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   overflow: visible;
+  background: #f4f4f4;           /* neutrale Fläche */
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -118,32 +124,27 @@ html, body {
 ============================= */
 iframe,
 [data-iframe-overflowed],
-[data-iframe-size] {
-  overflow: visible !important;
-}
-
-#kpi-root .card {
-  margin-bottom: 8px;
-}
-
+[data-iframe-size],
 [data-frame-overflow],
 [data-iframe-height] {
   overflow: visible !important;
-  padding-bottom: 16px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* =============================
    DISTRIBUTION BAR (KPI-Style)
 ============================= */
 .card.distribution-widget {
-  background: #f4f4f4 !important;  /* gleiche Fläche wie normale Widgets */
+  background: #f4f4f4 !important;  
   color: #333 !important;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   border-radius: 12px !important;
-  box-shadow: none !important;       /* kein Schatten mehr */
-  padding: 18px !important;          /* exakt wie .card */
+  box-shadow: none !important;       
+  padding: 18px !important;          
   margin-bottom: 8px !important;
   width: 100%;
   max-width: 1122px;
@@ -153,7 +154,7 @@ iframe,
 }
 
 .distribution-wrapper .card.distribution-widget {
-  margin: 0 auto;            /* exakt zentriert */
+  margin: 0 auto;
 }
 
 .card.distribution-widget:hover {
