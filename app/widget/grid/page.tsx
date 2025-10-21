@@ -7,20 +7,25 @@ import GridInner from "./grid-inner";
 function GridPageContent() {
   return (
     <>
-      {/* Initialisierung: Lizenz + auto height */}
+      {/* Initialisierung: Lizenz + moderne Optionen */}
       <Script id="iframe-resizer-init" strategy="beforeInteractive">
         {`
           window.iframeResizer = {
             license: 'GPLv3',
-            heightCalculationMethod: 'auto'
+            heightCalculationMethod: 'auto',
+            checkOrigin: false,       // erlaubt Einbettung über Softr / Fremddomain
+            log: false,               // deaktiviert Debug-Logs in Konsole
+            warningTimeout: 0,        // verhindert wiederholte Warnungen
+            resizeFrom: 'child'       // sorgt für saubere Höhenanpassung
           };
         `}
       </Script>
 
-      {/* Child-Skript (muss exakt die gleiche Version wie im Parent haben) */}
+      {/* Einbettung: gleiche Version wie Parent */}
       <Script
         src="https://cdn.jsdelivr.net/npm/iframe-resizer@4.3.9/js/iframeResizer.contentWindow.min.js"
         strategy="beforeInteractive"
+        crossOrigin="anonymous"
       />
 
       <GridInner />
