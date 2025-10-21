@@ -3,7 +3,7 @@ import "./grid.css";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import CardDistribution from "./CardDistribution";
-import CardDistributionBar from "./CardDistributionBar"; // 👉 NEU: horizontale Balkenvariante
+import CardDistributionBar from "./CardDistributionBar";
 
 type KPIConf = {
   label: string;
@@ -45,10 +45,9 @@ type ApiResp =
     };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
-  // 👉 Spezialfall: Distribution-Widgets direkt im Grid rendern (ohne zusätzlichen Card-Wrapper)
+  // 👉 Spezialfall: Distribution-Widgets direkt rendern
   if (data?.type === "distribution") {
     const useBar = conf.statusLogic === "distribution-bar";
-    // ⚠️ Kein zusätzliches div.card drumherum!
     return useBar ? (
       <CardDistributionBar conf={conf} data={data} />
     ) : (
@@ -56,7 +55,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     );
   }
 
-  // --- Normale KPI-Widgets ---
   const simpleMode = conf.logicType === "Nur zählen";
 
   const parseNum = (val?: string) => {
@@ -68,8 +66,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
   const leadTarget = parseNum(conf.leadTarget);
   const leadThreshold = parseNum(conf.leadThreshold);
 
-  // --- Hintergrundfarbe ---
-  let bg = "#FFD54F"; // Standard gelb
+  let bg = "#FFD54F";
   if (conf.statusLogic === "pipeline" && data && leadTarget && leadThreshold) {
     if (data.count < leadThreshold) bg = "#E57373";
     else if (data.count < leadTarget) bg = "#FFD54F";
@@ -83,7 +80,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     else if (color === "gray") bg = "#e0e0e0";
   }
 
-  // --- Subtext ---
   let sub = "";
   if (err) sub = err;
   else if (!data) sub = "Lade...";
@@ -100,7 +96,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     }
   }
 
-  // --- Value ---
   let valueDisplay: string | number = err
     ? "!"
     : data
@@ -124,7 +119,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     </div>
   );
 
-  // --- Klickbarer Wrapper ---
   return conf.target ? (
     <a
       href={conf.target}
@@ -147,36 +141,24 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
 export default function GridInner() {
   const sp = useSearchParams();
   const presetKey = sp.get("preset") || "vertrieb";
-
-  const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>(
-    []
-  );
+  const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
   const [confs, setConfs] = useState<KPIConf[]>([]);
 
-  // Widgets laden
   useEffect(() => {
     fetch(`/api/widgets?preset=${presetKey}`)
       .then((r) => r.json())
       .then((data: KPIConf[]) => {
         if (!Array.isArray(data) || !data.length) {
-          setItems([
-            {
-              conf: { label: "Config fehlt", table: "—" },
-              err: "config oder preset ungültig",
-            },
-          ]);
+          setItems([{ conf: { label: "Config fehlt", table: "—" }, err: "config ungültig" }]);
           return;
         }
         setConfs(data);
       })
       .catch((e) => {
-        setItems([
-          { conf: { label: "Fehler beim Laden", table: "—" }, err: String(e) },
-        ]);
+        setItems([{ conf: { label: "Fehler beim Laden", table: "—" }, err: String(e) }]);
       });
   }, [presetKey]);
 
-  // Daten pro Widget laden
   useEffect(() => {
     if (!confs.length) return;
     setItems(confs.map((c) => ({ conf: c })));
@@ -194,25 +176,31 @@ export default function GridInner() {
       fetch(u.toString())
         .then((r) => r.json())
         .then((data: ApiResp) =>
-          setItems((prev) =>
-            prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
-          )
+          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, data } : p)))
         )
         .catch((e) =>
-          setItems((prev) =>
-            prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p))
-          )
+          setItems((prev) => prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p)))
         );
     });
   }, [confs]);
 
   return (
     <div id="kpi-root" data-iframe-height>
-      <div className="grid-container">
-        {items.map((it, idx) => (
-          <Card key={idx} {...it} />
-        ))}
-      </div>
+      {items.map((it, idx) => {
+        const isDistribution =
+          it.conf.statusLogic === "distribution" || it.conf.statusLogic === "distribution-bar";
+
+        // ⚠️ Keine doppelte grid-container-Umhüllung für Distribution-Widgets
+        if (isDistribution) {
+          return <Card key={idx} {...it} />;
+        }
+
+        return (
+          <div key={idx} className="grid-container">
+            <Card {...it} />
+          </div>
+        );
+      })}
     </div>
   );
 }
