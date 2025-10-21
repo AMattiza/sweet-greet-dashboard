@@ -268,3 +268,24 @@ iframe,
   display: flex;
   flex-direction: column;
 }
+
+/* ===========================================================
+   Distribution-Bars wie reguläre Grid-Items behandeln
+   =========================================================== */
+.grid-item-full {
+  grid-column: span 1 !important; /* statt über volle Breite */
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-item-full .card.distribution-widget {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Falls nötig, optisch denselben Abstand wie .grid-item erzeugen */
+.grid-item-full {
+  margin: 0 !important;
+  padding: 0 !important;
+}
