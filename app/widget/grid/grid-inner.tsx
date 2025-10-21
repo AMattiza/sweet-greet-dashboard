@@ -181,11 +181,18 @@ export default function GridInner() {
 
       fetch(u.toString())
         .then((r) => r.json())
-        .then((data: ApiResp) =>
+        .then((data: ApiResp) => {
           setItems((prev) =>
             prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
-          )
-        )
+          );
+
+          /** 🔧 >>> HIER NEU: iFrame-Höhe nach Datenupdate anpassen <<< */
+          if (typeof window !== "undefined" && window.parentIFrame?.size) {
+            setTimeout(() => {
+              window.parentIFrame.size();
+            }, 300); // 300ms nach DOM-Update für stabile Höhe
+          }
+        })
         .catch((e) =>
           setItems((prev) =>
             prev.map((p, idx) => (idx === i ? { conf: c, err: String(e) } : p))
