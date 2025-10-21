@@ -19,7 +19,7 @@ html, body {
    ROOT CONTAINER
 ============================= */
 #kpi-root {
-  padding: 0 !important; /* Kein zusätzliches Padding mehr */
+  padding: 0 !important;
   font-family: 'Inter', sans-serif;
   background: #FFFFFF;
   color: #74786E;
@@ -34,9 +34,9 @@ html, body {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
   width: 100%;
-  max-width: 1122px;          /* Einheitliche Maximalbreite */
-  margin: 0 auto;             /* Zentriert */
-  padding: 16px;              /* Gleicher Innenabstand wie vorher Root */
+  max-width: 1122px;  /* Einheitliche Maximalbreite */
+  margin: 0 auto;     /* Zentriert */
+  padding: 16px;
   overflow: visible !important;
 }
 
@@ -51,9 +51,14 @@ html, body {
   padding: 0;
 }
 
-/* Volle Breite für Distribution-Widgets */
-.grid-item-full {
-  grid-column: 1 / -1;
+/* ======================================
+   🔧 Distribution-Wrapper für exakte Breite
+====================================== */
+.distribution-wrapper {
+  display: flex;
+  justify-content: center;   /* Zentriert die Karte horizontal */
+  align-items: stretch;
+  grid-column: 1 / -1;       /* Nimmt gesamte Grid-Breite ein */
 }
 
 /* =============================
@@ -141,10 +146,13 @@ iframe,
   padding: 16px !important;
   margin-bottom: 8px !important;
   width: 100%;
-  max-width: 1122px;
+  max-width: 1122px;         /* Fix: gleiche Breite wie Grid */
   box-sizing: border-box;
-  align-self: center; /* exakt mittig */
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.distribution-wrapper .card.distribution-widget {
+  margin: 0 auto;            /* exakt zentriert */
 }
 
 .card.distribution-widget:hover {
@@ -210,6 +218,10 @@ iframe,
 @media (max-width: 768px) {
   .grid-container {
     padding: 8px;
+    max-width: 100%;
+  }
+
+  .distribution-wrapper .card.distribution-widget {
     max-width: 100%;
   }
 
