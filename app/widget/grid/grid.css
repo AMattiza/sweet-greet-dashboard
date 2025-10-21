@@ -9,12 +9,17 @@ html, body {
   min-height: 0;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* =============================
    ROOT CONTAINER
 ============================= */
 #kpi-root {
-  padding: 16px;
-  box-sizing: border-box;
+  padding: 0 !important; /* Kein zusätzliches Padding mehr */
   font-family: 'Inter', sans-serif;
   background: #FFFFFF;
   color: #74786E;
@@ -28,7 +33,27 @@ html, body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
+  width: 100%;
+  max-width: 1122px;          /* Einheitliche Maximalbreite */
+  margin: 0 auto;             /* Zentriert */
+  padding: 16px;              /* Gleicher Innenabstand wie vorher Root */
   overflow: visible !important;
+}
+
+/* =============================
+   GRID ITEMS
+============================= */
+.grid-item,
+.grid-item-full {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+/* Volle Breite für Distribution-Widgets */
+.grid-item-full {
+  grid-column: 1 / -1;
 }
 
 /* =============================
@@ -43,7 +68,6 @@ html, body {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Hover-Effekt für alle Widgets */
 .card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
@@ -107,37 +131,41 @@ iframe,
    DISTRIBUTION BAR (KPI-Style)
 ============================= */
 .card.distribution-widget {
-  background: #fff;
-  color: #74786E;
+  background: #fff !important;
+  color: #74786E !important;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  padding: 18px;
-  text-align: center;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+  padding: 16px !important;
+  margin-bottom: 8px !important;
+  width: 100%;
+  max-width: 1122px;
+  box-sizing: border-box;
+  align-self: center; /* exakt mittig */
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Gleicher Hover-Effekt wie KPI-Widgets */
 .card.distribution-widget:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
+/* Header + Balken */
 .card.distribution-widget .distribution-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 14px;
+  margin-bottom: 10px !important;
 }
 
 .card.distribution-widget .distribution-bar {
   display: flex;
   width: 100%;
   height: 6.4rem;
-  border-radius: 12px;
-  overflow: hidden;
+  border-radius: 8px !important;
+  overflow: hidden !important;
   background: #f6f6f6;
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.05);
 }
@@ -154,12 +182,11 @@ iframe,
   transition: all 0.3s ease;
 }
 
-/* Schriftarten und Größen */
+/* Typografie */
 .card.distribution-widget .segment-title {
   font-family: 'DM Sans', sans-serif;
   font-weight: 600;
   font-size: 14px;
-  margin-bottom: 0;
 }
 
 .card.distribution-widget .segment-value {
@@ -167,11 +194,6 @@ iframe,
   font-weight: 600;
   font-size: 32px;
   line-height: 40px;
-}
-
-.card.distribution-widget .segment-value.small-only {
-  font-size: 20px;
-  line-height: 24px;
 }
 
 .card.distribution-widget .segment-sub {
@@ -186,6 +208,11 @@ iframe,
    RESPONSIVE – MOBILE
 ============================= */
 @media (max-width: 768px) {
+  .grid-container {
+    padding: 8px;
+    max-width: 100%;
+  }
+
   .card.distribution-widget .distribution-bar {
     height: 4.6rem;
   }
@@ -203,89 +230,4 @@ iframe,
     font-size: 22px !important;
     line-height: 24px !important;
   }
-}
-
-/* ======================================================
-   FORCE OVERRIDE: Distribution Widgets = eigene Karte
-   ====================================================== */
-.card.distribution-widget {
-  /* 👇 Hintergrund und Schrift überschreiben */
-  background: #ffffff !important;
-  color: #74786E !important;
-
-  /* 👇 Padding leicht reduziert für kompakteren Look */
-  padding: 16px !important;
-
-  /* 👇 Schatten an KPI-Style angleichen */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
-
-  /* 👇 Einheitlicher Radius */
-  border-radius: 12px !important;
-
-  /* 👇 Kein zusätzliches Margin unten */
-  margin-bottom: 8px !important;
-
-  /* 👇 Damit Text & Balken korrekt fließen */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-/* Titel & Sub kompakter */
-.card.distribution-widget .distribution-header {
-  margin-bottom: 10px !important;
-}
-
-/* Balken bündig & sauber */
-.card.distribution-widget .distribution-bar {
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  background: #f6f6f6;
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.05);
-}
-
-/* ======================================================
-   GRID STRUCTURE FIX
-   ====================================================== */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  align-items: stretch;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Normales Widget = Standardkarte */
-.grid-item {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Vollbreite Widgets wie Distribution Bars */
-.grid-item-full {
-  grid-column: 1 / -1; /* volle Breite */
-  display: flex;
-  flex-direction: column;
-}
-
-/* ===========================================================
-   Distribution-Bars wie reguläre Grid-Items behandeln
-   =========================================================== */
-.grid-item-full {
-  grid-column: span 1 !important; /* statt über volle Breite */
-  display: flex;
-  flex-direction: column;
-}
-
-.grid-item-full .card.distribution-widget {
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-/* Falls nötig, optisch denselben Abstand wie .grid-item erzeugen */
-.grid-item-full {
-  margin: 0 !important;
-  padding: 0 !important;
 }
