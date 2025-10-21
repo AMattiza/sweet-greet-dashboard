@@ -13,10 +13,11 @@ type Props = {
     target?: string;
     targetBlank?: boolean;
   };
-  data: {
+  data?: {
     total: number;
     distribution: DistributionItem[];
   };
+  loading?: boolean;
 };
 
 const COLORS = [
@@ -26,8 +27,9 @@ const COLORS = [
   "#5F7069", // feldgrau
 ];
 
-export default function CardDistributionBar({ conf, data }: Props) {
-  const dist = data.distribution.slice(0, 8);
+export default function CardDistributionBar({ conf, data, loading }: Props) {
+  const isLoading = loading || !data || !data.distribution?.length;
+  const dist = data?.distribution?.slice(0, 8) || [];
 
   // 🎨 Prozentbalken
   const bar = (
@@ -59,14 +61,25 @@ export default function CardDistributionBar({ conf, data }: Props) {
     </div>
   );
 
+  // 💫 Ladezustand / Skeleton
+  const skeleton = (
+    <div className="flex flex-col items-center justify-center gap-3 animate-pulse py-6">
+      <div className="w-2/3 h-6 bg-gray-200 rounded"></div>
+      <div className="w-1/2 h-6 bg-gray-200 rounded"></div>
+    </div>
+  );
+
   // 🧩 Der Balken selbst ist jetzt die KPI-Card
   const card = (
-    <div className="card distribution-widget">
+    <div
+      className="card distribution-widget transition-all duration-300 min-h-[180px] md:min-h-[200px]"
+      style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+    >
       <div className="distribution-header">
         <div className="card-title">{conf.label}</div>
-        <div className="card-sub">Gesamt: {data.total} Datensätze</div>
+        {!isLoading && <div className="card-sub">Gesamt: {data?.total} Datensätze</div>}
       </div>
-      {bar}
+      {isLoading ? skeleton : bar}
     </div>
   );
 
