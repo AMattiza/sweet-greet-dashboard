@@ -45,9 +45,14 @@ type ApiResp =
     };
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
-  // 👉 Spezialfall: Distribution Widgets
-  if (data?.type === "distribution") {
+  // 🟦 Spezialfall: Distribution-Widgets sollen KEINE zusätzliche .card bekommen
+  if (
+    data?.type === "distribution" ||
+    conf.statusLogic === "distribution" ||
+    conf.statusLogic === "distribution-bar"
+  ) {
     const useBar = conf.statusLogic === "distribution-bar";
+    // Rückgabe der Distribution-Komponente direkt, ohne card-wrapper
     return useBar ? (
       <CardDistributionBar conf={conf} data={data} />
     ) : (
@@ -120,6 +125,7 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     </div>
   );
 
+  // 🔗 Klickbarer Wrapper für Standard-Karten
   return conf.target ? (
     <a
       href={conf.target}
