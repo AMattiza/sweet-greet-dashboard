@@ -27,32 +27,32 @@ type KPIConf = {
   leadThreshold?: string;
 };
 
-type ApiResp =
-  | {
-      count: number;
-      maxAgeDays: number;
-      status: "green" | "amber" | "red" | "gray";
-      value?: string | number | null;
-    }
-  | {
-      type: "distribution";
-      total: number;
-      distribution: {
-        label: string;
-        count: number;
-        percentage: number;
-      }[];
-    };
+type DistributionResp = {
+  type: "distribution";
+  total: number;
+  distribution: {
+    label: string;
+    count: number;
+    percentage: number;
+  }[];
+};
+
+type CountResp = {
+  count: number;
+  maxAgeDays: number;
+  status: "green" | "amber" | "red" | "gray";
+  value?: string | number | null;
+};
+
+type ApiResp = DistributionResp | CountResp;
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
-  // 🟦 Spezialfall: Distribution-Widgets sollen KEINE zusätzliche .card bekommen
   if (
-    data?.type === "distribution" ||
+    (data && "type" in data && data.type === "distribution") ||
     conf.statusLogic === "distribution" ||
     conf.statusLogic === "distribution-bar"
   ) {
     const useBar = conf.statusLogic === "distribution-bar";
-    // Rückgabe der Distribution-Komponente direkt, ohne card-wrapper
     return useBar ? (
       <CardDistributionBar conf={conf} data={data} />
     ) : (
@@ -60,7 +60,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     );
   }
 
-  // --- Standard Widgets ---
   const simpleMode = conf.logicType === "Nur zählen";
 
   const parseNum = (val?: string) => {
@@ -125,7 +124,6 @@ function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) 
     </div>
   );
 
-  // 🔗 Klickbarer Wrapper für Standard-Karten
   return conf.target ? (
     <a
       href={conf.target}
@@ -152,7 +150,6 @@ export default function GridInner() {
   const [items, setItems] = useState<{ conf: KPIConf; data?: ApiResp; err?: string }[]>([]);
   const [confs, setConfs] = useState<KPIConf[]>([]);
 
-  // Widgets-Konfiguration laden
   useEffect(() => {
     fetch(`/api/widgets?preset=${presetKey}`)
       .then((r) => r.json())
@@ -168,7 +165,6 @@ export default function GridInner() {
       });
   }, [presetKey]);
 
-  // KPI-Daten laden
   useEffect(() => {
     if (!confs.length) return;
     setItems(confs.map((c) => ({ conf: c })));
@@ -198,26 +194,26 @@ export default function GridInner() {
     });
   }, [confs]);
 
-  // 🧱 Einheitliches Grid + korrekte Breite für Distribution-Bar
-return (
-  <div id="kpi-root" data-iframe-height>
-    <div className="grid-container">
-      {items.map((it, idx) => {
-        const isDistribution =
-  (it.data && "type" in it.data && it.data.type === "distribution") ||
-  it.conf.statusLogic === "distribution" ||
-  it.conf.statusLogic === "distribution-bar";
+  return (
+    <div id="kpi-root" data-iframe-height>
+      <div className="grid-container">
+        {items.map((it, idx) => {
+          const isDistribution =
+            (it.data && "type" in it.data && it.data.type === "distribution") ||
+            it.conf.statusLogic === "distribution" ||
+            it.conf.statusLogic === "distribution-bar";
 
-        // Wenn Distribution → volle Breite
-        const gridClass = isDistribution ? "grid-item-full" : "grid-item";
+          const wrapperClass = isDistribution
+            ? "grid-item distribution-wrapper"
+            : "grid-item";
 
-        return (
-          <div key={idx} className={gridClass}>
-            <Card {...it} />
-          </div>
-        );
-      })}
+          return (
+            <div key={idx} className={wrapperClass}>
+              <Card {...it} />
+            </div>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
 }
