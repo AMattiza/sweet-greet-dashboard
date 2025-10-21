@@ -17,9 +17,15 @@ export async function GET(req: Request) {
     const dateField = searchParams.get("dateField") || undefined;
     const redDays = parseInt(searchParams.get("redDays") || "0");
     const list = searchParams.get("list");
-    const field = searchParams.get("field") || undefined;
-    const aggregate = searchParams.get("aggregate") || "first"; // first | sum | avg
-    const statusLogic = searchParams.get("statusLogic") || "tasks"; // tasks | pipeline | distribution-bar | fixed*
+
+    // 🧩 WICHTIG: Mehrere Felder erlauben (durch Komma oder Semikolon getrennt)
+    const fieldParam = searchParams.get("field") || undefined;
+    const fields = fieldParam
+      ? fieldParam.split(/[;,]/).map(f => f.trim()).filter(Boolean)
+      : undefined;
+
+    const aggregate = searchParams.get("aggregate") || "first";
+    const statusLogic = searchParams.get("statusLogic") || "tasks";
 
     console.log("📊 KPI-Request:", {
       table,
@@ -28,21 +34,20 @@ export async function GET(req: Request) {
       dateField,
       redDays,
       list,
-      field,
+      fields,
       aggregate,
       statusLogic,
     });
 
-    // Airtable Records laden
+    // Airtable Records laden (mehrere Felder gleichzeitig!)
     const recs = await listRecords({
       baseId: process.env.AIRTABLE_BASE_ID!,
       table,
       view,
       filterByFormula: formula,
-      fields: field ? [field] : undefined,
+      fields,
     });
 
-    // 🛡️ Fallback: Keine oder ungültige Antwort
     if (!recs || !Array.isArray(recs)) {
       console.warn("⚠️ Keine Records empfangen – vermutlich Fehler in Formel:", formula);
       return NextResponse.json({
@@ -56,56 +61,47 @@ export async function GET(req: Request) {
 
     console.log(`✅ ${recs.length} Records geladen für Tabelle "${table}"`);
 
-    // Direkt alle Records zurückgeben, wenn explizit angefordert
     if (list) {
       return NextResponse.json({ records: recs });
     }
 
-    // 🟩 Erweiterte Distribution-Bar: unterstützt mehrere Felder (z. B. "Lagerbestand,Gesamtverbrauch")
-if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && field) {
-  const fieldList = field
-  .split(/[;,]/) // trennt bei Komma ODER Semikolon
-  .map(f => f.trim())
-  .filter(Boolean);
-  const groups: Record<string, number> = {};
+    // 🟩 Distribution-Bar mit Mehrfeld-Unterstützung
+    if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && fields?.length) {
+      const groups: Record<string, number> = {};
 
-  for (const rec of recs) {
-    for (const f of fieldList) {
-      const val = rec.fields[f];
+      for (const rec of recs) {
+        for (const f of fields) {
+          const val = rec.fields[f];
+          if (val === undefined || val === null) continue;
 
-      if (val === undefined || val === null) continue;
-
-      if (typeof val === "number") {
-        // numerische Felder → aufsummieren
-        groups[f] = (groups[f] || 0) + val;
-      } else if (Array.isArray(val)) {
-        // Mehrfachauswahl-Felder → Einträge zählen
-        for (const v of val) groups[v] = (groups[v] || 0) + 1;
-      } else if (typeof val === "string" && val.trim() !== "") {
-        // Textfeld → Kategorien zählen
-        groups[val.trim()] = (groups[val.trim()] || 0) + 1;
+          if (typeof val === "number") {
+            groups[f] = (groups[f] || 0) + val;
+          } else if (Array.isArray(val)) {
+            for (const v of val) groups[v] = (groups[v] || 0) + 1;
+          } else if (typeof val === "string" && val.trim() !== "") {
+            groups[val.trim()] = (groups[val.trim()] || 0) + 1;
+          }
+        }
       }
+
+      const total = Object.values(groups).reduce((a, b) => a + b, 0);
+      const distribution = Object.entries(groups)
+        .map(([label, count]) => ({
+          label,
+          count,
+          percentage: total ? (count / total) * 100 : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      console.log("📊 Distribution (multi-field) Ergebnis:", distribution);
+
+      return NextResponse.json({
+        type: "distribution",
+        total,
+        distribution,
+        debug: { table, view, formula, fields, found: recs.length },
+      });
     }
-  }
-
-  const total = Object.values(groups).reduce((a, b) => a + b, 0);
-  const distribution = Object.entries(groups)
-    .map(([label, count]) => ({
-      label,
-      count,
-      percentage: total ? (count / total) * 100 : 0,
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  console.log("📊 Distribution (multi-field) Ergebnis:", distribution);
-
-  return NextResponse.json({
-    type: "distribution",
-    total,
-    distribution,
-    debug: { table, view, formula, fields: fieldList, found: recs.length },
-  });
-}
 
     // 🔢 Standard KPI-Berechnung
     let count = recs.length;
@@ -141,10 +137,10 @@ if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && fi
 
     // 📈 Aggregationslogik
     let value: string | number | null = null;
-    if (field && recs.length > 0) {
+    if (fields?.length && recs.length > 0) {
       const values = recs
-        .map((r) => r.fields[field])
-        .filter((v) => v !== undefined && v !== null);
+        .flatMap(r => fields.map(f => r.fields[f]))
+        .filter(v => v !== undefined && v !== null);
 
       if (values.length > 0) {
         if (aggregate === "sum") {
@@ -163,7 +159,6 @@ if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && fi
       }
     }
 
-    // ✅ Standard-Antwort
     return NextResponse.json({
       count,
       maxAgeDays,
@@ -176,4 +171,3 @@ if ((statusLogic === "distribution" || statusLogic === "distribution-bar") && fi
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
-
