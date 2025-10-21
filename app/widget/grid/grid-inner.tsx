@@ -198,16 +198,26 @@ export default function GridInner() {
     });
   }, [confs]);
 
-  // 🧱 Einheitliches Grid + Sonderbehandlung für Distribution-Bar
-  return (
+  // 🧱 Einheitliches Grid + korrekte Breite für Distribution-Bar
+return (
   <div id="kpi-root" data-iframe-height>
     <div className="grid-container">
-      {items.map((it, idx) => (
-        <div key={idx} className="grid-item">
-          <Card {...it} />
-        </div>
-      ))}
+      {items.map((it, idx) => {
+        const isDistribution =
+          it.data?.type === "distribution" ||
+          it.conf.statusLogic === "distribution" ||
+          it.conf.statusLogic === "distribution-bar";
+
+        // Wenn Distribution → volle Breite
+        const gridClass = isDistribution ? "grid-item-full" : "grid-item";
+
+        return (
+          <div key={idx} className={gridClass}>
+            <Card {...it} />
+          </div>
+        );
+      })}
     </div>
-   </div>
-  );
+  </div>
+);
 }
