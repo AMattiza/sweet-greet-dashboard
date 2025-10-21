@@ -243,3 +243,28 @@ iframe,
   background: #f6f6f6;
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.05);
 }
+
+/* ======================================================
+   GRID STRUCTURE FIX
+   ====================================================== */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Normales Widget = Standardkarte */
+.grid-item {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Vollbreite Widgets wie Distribution Bars */
+.grid-item-full {
+  grid-column: 1 / -1; /* volle Breite */
+  display: flex;
+  flex-direction: column;
+}
