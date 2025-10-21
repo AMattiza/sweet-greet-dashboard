@@ -200,20 +200,13 @@ export default function GridInner() {
 
   // 🧱 Einheitliches Grid + Sonderbehandlung für Distribution-Bar
   return (
-    <div id="kpi-root" data-iframe-height>
-      <div className="grid-container">
-        {items.map((it, idx) => {
-          const isDistribution =
-            it.conf.statusLogic === "distribution" ||
-            it.conf.statusLogic === "distribution-bar";
-
-          return (
-            <div key={idx} className={isDistribution ? "grid-item-full" : "grid-item"}>
-              <Card {...it} />
-            </div>
-          );
-        })}
-      </div>
+  <div id="kpi-root" data-iframe-height>
+    <div className="grid-container">
+      {items.map((it, idx) => (
+        <div key={idx} className="grid-item">
+          <Card {...it} />
+        </div>
+      ))}
     </div>
-  );
-}
+  </div>
+);
