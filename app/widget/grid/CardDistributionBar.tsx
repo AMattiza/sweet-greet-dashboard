@@ -91,7 +91,7 @@ export default function CardDistributionBar({ conf, data, loading }: Props) {
     </div>
   );
 
-  // 🔗 Klickbar, falls Ziel vorhanden
+  // 🔗 Klickbar falls Ziel vorhanden
   return conf.target ? (
     <a
       href={conf.target}
