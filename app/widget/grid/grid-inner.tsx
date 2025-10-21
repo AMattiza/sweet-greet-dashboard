@@ -204,9 +204,9 @@ return (
     <div className="grid-container">
       {items.map((it, idx) => {
         const isDistribution =
-          it.data?.type === "distribution" ||
-          it.conf.statusLogic === "distribution" ||
-          it.conf.statusLogic === "distribution-bar";
+  (it.data && "type" in it.data && it.data.type === "distribution") ||
+  it.conf.statusLogic === "distribution" ||
+  it.conf.statusLogic === "distribution-bar";
 
         // Wenn Distribution → volle Breite
         const gridClass = isDistribution ? "grid-item-full" : "grid-item";
