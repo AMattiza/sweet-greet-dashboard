@@ -195,10 +195,18 @@ export default function GridInner() {
           );
 
 // 🧩 iframe-resizer: dynamische Höhenanpassung nach Render
-if (typeof window !== "undefined" && window.parentIFrame && typeof window.parentIFrame.size === "function") {
+if (
+  typeof window !== "undefined" &&
+  window.parentIFrame &&
+  typeof window.parentIFrame.size === "function"
+) {
   setTimeout(() => {
     try {
-      window.parentIFrame.size();
+      // ⬇️ innerhalb des Callbacks nochmal kurz prüfen
+      const p = window.parentIFrame;
+      if (p && typeof p.size === "function") {
+        p.size();
+      }
     } catch {
       // fails silently if iframeResizer not loaded
     }
