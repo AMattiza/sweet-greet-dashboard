@@ -1,268 +1,153 @@
-/* =============================
-   BASE: Fonts & Reset
-============================= */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@600&family=Inter:wght@300&display=swap');
+/* ===========================================================
+   GRID-LAYOUT FÜR SWEET GREET KPI DASHBOARD
+   =========================================================== */
 
-html, body {
-  margin: 0 !important;
-  padding: 0 !important;
-  min-height: 0;
-  background: transparent !important; /* kein weißer Hintergrund */
-  overflow: visible !important;
-}
-
-*,
-*::before,
-*::after {
+/* Grid Container */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
   box-sizing: border-box;
 }
 
-/* =============================
-   ROOT CONTAINER
-============================= */
-#kpi-root {
-  padding: 0 !important;
-  margin: 0 !important;
-  font-family: 'Inter', sans-serif;
-  background: transparent !important;
-  color: #74786E;
-  box-shadow: none !important;
-  border: none !important;
-  overflow: visible !important;
-}
-
-/* =============================
-   GRID LAYOUT
-============================= */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  width: 100%;
-  max-width: 1122px;
-  margin: 0 auto;
-  padding: 0;
-  background: transparent !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-}
-
-/* =============================
-   GRID ITEMS
-============================= */
-.grid-item,
-.grid-item-full {
+/* Grid Item */
+.grid-item {
   display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-}
-
-/* =============================
-   Distribution Wrapper
-============================= */
-.distribution-wrapper {
-  display: flex;
-  justify-content: center;
   align-items: stretch;
-  grid-column: 1 / -1;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
-/* =============================
-   KPI CARDS
-============================= */
+/* Karten-Layout (Standard Widgets) */
 .card {
+  width: 100%;
   border-radius: 12px;
-  padding: 18px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  overflow: visible;
-  background: #f4f4f4;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Weißer Text nur bei klassischen KPI-Widgets */
-.card:not(.distribution-widget) {
-  color: #fff;
-}
-
-/* Titel, Zahl, Untertitel */
+/* Titel & Werte */
 .card-title {
-  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
   font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 6px;
-  color: inherit;
+  margin-bottom: 0.25rem;
 }
 
 .card-value {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  font-size: 32px;
-  line-height: 40px;
-  color: inherit;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
 }
 
 .card-sub {
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  font-size: 12px;
-  opacity: 0.95;
-  color: inherit;
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
-/* Status-Farben */
-.card.green  { background: #9EB384; }
-.card.red    { background: #E57373; }
-.card.orange { background: #DA9D41; }
+/* ===========================================================
+   DISTRIBUTION-BAR (SPEZIALWIDGETS)
+   =========================================================== */
 
-/* =============================
-   IFRAME / SOFTR FIXES
-============================= */
-iframe,
-[data-iframe-overflowed],
-[data-iframe-size],
-[data-frame-overflow],
-[data-iframe-height] {
-  overflow: visible !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Softr-Wrapper neutralisieren */
-:host,
-.custom-code-block,
-[data-element-type="custom-code"],
-[data-block-type="custom-code"],
-[data-element="custom-code"],
-.softr-section,
-.softr-section .container {
-  background: transparent !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-}
-
-/* =============================
-   DISTRIBUTION BAR (KPI-Style)
-============================= */
 .card.distribution-widget {
-  background: #f4f4f4 !important;  
-  color: #333 !important;
+  min-height: 220px;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  border-radius: 12px !important;
-  box-shadow: none !important;       
-  padding: 18px !important;          
-  margin-bottom: 8px !important;
-  width: 100%;
-  max-width: 1122px;
-  box-sizing: border-box;
-  align-self: center;
-  transition: none;
+  justify-content: space-between;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
-.distribution-wrapper .card.distribution-widget {
-  margin: 0 auto;
-}
-
-.card.distribution-widget:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-}
-
-/* Header + Balken */
-.card.distribution-widget .distribution-header {
+.distribution-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 10px !important;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
 }
 
-.card.distribution-widget .distribution-bar {
+.card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+}
+
+.card-sub {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Balken selbst */
+.distribution-bar {
   display: flex;
-  width: 100%;
-  height: 6.4rem;
-  min-height: 6.4rem;
-  border-radius: 8px !important;
-  overflow: visible !important; /* früher: hidden */
-  background: #f6f6f6;
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.05);
+  height: 9rem;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #e9ecef;
 }
 
-/* Balkenabschnitt */
-.card.distribution-widget .bar-segment {
+/* Segmente */
+.bar-segment {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  white-space: nowrap;
-  padding: 6px 4px;
-  transition: all 0.3s ease;
-}
-
-/* Typografie */
-.card.distribution-widget .segment-title {
-  font-family: 'DM Sans', sans-serif;
+  text-align: center;
   font-weight: 600;
-  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.card.distribution-widget .segment-value {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  font-size: 32px;
-  line-height: 40px;
+.bar-segment:hover {
+  filter: brightness(1.1);
+  transform: scale(1.01);
 }
 
-.card.distribution-widget .segment-sub {
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  font-size: 12px;
-  opacity: 0.95;
-  margin-top: 2px;
+.segment-title {
+  font-size: 0.9rem;
 }
 
-/* =============================
-   RESPONSIVE – MOBILE
-============================= */
+.segment-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.segment-sub {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+/* ===========================================================
+   RESPONSIVE
+   =========================================================== */
+
 @media (max-width: 768px) {
   .grid-container {
-    padding: 8px;
-    max-width: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
   }
 
-  .distribution-wrapper .card.distribution-widget {
-    max-width: 100%;
+  .card.distribution-widget {
+    min-height: 180px;
+    padding: 1rem;
   }
 
-  .card.distribution-widget .distribution-bar {
-    height: 4.6rem;
-    min-height: 4.6rem;
+  .distribution-bar {
+    height: 7rem;
   }
 
-  .card.distribution-widget .bar-segment {
-    padding: 0;
-  }
-
-  .card.distribution-widget .segment-title,
-  .card.distribution-widget .segment-sub {
-    display: none !important;
-  }
-
-  .card.distribution-widget .segment-value {
-    font-size: 22px !important;
-    line-height: 24px !important;
+  .segment-value {
+    font-size: 1.3rem;
   }
 }
