@@ -1,33 +1,37 @@
 const fs = require("fs");
 const path = require("path");
 
-function fixAsKeys(dir) {
-  const files = fs.readdirSync(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
+function fixFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+  let data = fs.readFileSync(filePath, "utf8");
+  const before = data;
 
-    if (stat.isDirectory()) {
-      fixAsKeys(fullPath);
-    } else if (file.endsWith(".js")) {
-      let data = fs.readFileSync(fullPath, "utf8");
+  // Safari mag unquoted keys wie as: "style" nicht — hier alle Varianten abfangen:
+  data = data
+    // Variante: {as:"style"}
+    .replace(/\{(\s*)as\s*:/g, '{"as":')
+    // Variante: ,as:"style"
+    .replace(/,(\s*)as\s*:/g, ',"as":')
+    // Variante: (as:"style")
+    .replace(/\((\s*)as\s*:/g, '("as":');
 
-      // Nur wenn der Schlüssel `as:` vorkommt (z. B. {as:"style"})
-      if (data.includes("as:")) {
-        const fixed = data.replace(/\b(as):\s*("?[a-zA-Z0-9_-]+"?)/g, '"as": $2');
-        if (fixed !== data) {
-          fs.writeFileSync(fullPath, fixed, "utf8");
-          console.log(`✅ Patched: ${fullPath}`);
-        }
-      }
-    }
+  if (data !== before) {
+    fs.writeFileSync(filePath, data, "utf8");
+    console.log("✅ Patched:", filePath);
   }
 }
 
-const chunksDir = path.join(__dirname, "../.next/static/chunks");
-if (fs.existsSync(chunksDir)) {
-  fixAsKeys(chunksDir);
-  console.log("🚀 Postbuild-Fix abgeschlossen.");
-} else {
-  console.warn("⚠️  Keine Chunks gefunden. Wurde `next build` bereits ausgeführt?");
+function walk(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const file of fs.readdirSync(dir)) {
+    const full = path.join(dir, file);
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) walk(full);
+    else if (file.endsWith(".js")) fixFile(full);
+  }
 }
+
+console.log("🩹 Running Safari syntax fix…");
+walk(".next/static/chunks");
+walk(".next/server/app");
+console.log("🚀 Safari postbuild fix complete.");
