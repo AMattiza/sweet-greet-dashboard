@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next telemetry disable",
+    "build": "next build && node scripts/postbuild-fix.js && next telemetry disable",
     "start": "next start"
   },
   "dependencies": {
