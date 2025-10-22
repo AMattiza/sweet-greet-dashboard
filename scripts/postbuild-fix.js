@@ -1,37 +1,39 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-function fixFile(filePath) {
-  if (!fs.existsSync(filePath)) return;
-  let data = fs.readFileSync(filePath, "utf8");
-  const before = data;
+const ROOTS = [".next/static/chunks", ".next/server/app"];
 
-  // Safari mag unquoted keys wie as: "style" nicht — hier alle Varianten abfangen:
-  data = data
-    // Variante: {as:"style"}
-    .replace(/\{(\s*)as\s*:/g, '{"as":')
-    // Variante: ,as:"style"
-    .replace(/,(\s*)as\s*:/g, ',"as":')
-    // Variante: (as:"style")
-    .replace(/\((\s*)as\s*:/g, '("as":');
+function fixSafariBug(file) {
+  if (!fs.existsSync(file)) return;
+  let code = fs.readFileSync(file, "utf8");
+  const original = code;
 
-  if (data !== before) {
-    fs.writeFileSync(filePath, data, "utf8");
-    console.log("✅ Patched:", filePath);
+  // Skip source maps and JSON
+  if (file.endsWith(".map") || file.endsWith(".json")) return;
+
+  // Replace all unquoted "as:" keys
+  // Catches {as:"..."}, ,as:"...", (as:"..."), preinit(e,{as:"..."})
+  code = code.replace(
+    /([\{,\(])\s*as\s*:/g,
+    '$1 "as":'
+  );
+
+  if (code !== original) {
+    fs.writeFileSync(file, code, "utf8");
+    console.log("✅ Patched:", file);
   }
 }
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return;
-  for (const file of fs.readdirSync(dir)) {
-    const full = path.join(dir, file);
+  for (const entry of fs.readdirSync(dir)) {
+    const full = path.join(dir, entry);
     const stat = fs.statSync(full);
     if (stat.isDirectory()) walk(full);
-    else if (file.endsWith(".js")) fixFile(full);
+    else if (entry.endsWith(".js")) fixSafariBug(full);
   }
 }
 
-console.log("🩹 Running Safari syntax fix…");
-walk(".next/static/chunks");
-walk(".next/server/app");
-console.log("🚀 Safari postbuild fix complete.");
+console.log("🩹 Running advanced Safari syntax fix…");
+ROOTS.forEach(walk);
+console.log("🚀 Safari fix complete.");
