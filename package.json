@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build && node scripts/postbuild-fix.js && next telemetry disable",
-    "start": "next start"
+  "dev": "next dev",
+  "build": "next build && node ./scripts/postbuild-fix.js && next telemetry disable",
+  "vercel-build": "next build && node ./scripts/postbuild-fix.js",
+  "start": "next start"
   },
   "dependencies": {
     "next": "14.2.5",
