@@ -1,35 +1,48 @@
 "use client";
+
 import { Suspense } from "react";
 import Script from "next/script";
 import "./grid.css";
 import GridInner from "./grid-inner";
 
+/**
+ * Lädt das KPI-Grid innerhalb eines Softr-iFrames.
+ * Stellt sicher, dass iframe-resizer korrekt initialisiert ist,
+ * bevor GridInner rendert und nach Datenupdates Höhe angepasst wird.
+ */
 function GridPageContent() {
   return (
     <>
-      {/* Initialisierung: Lizenz + moderne Optionen (mit verzögerter Aktivierung) */}
+      {/* Initialisiert iframe-resizer (Kind-Seite) mit stabiler Konfiguration */}
       <Script id="iframe-resizer-init" strategy="afterInteractive">
         {`
-          // Warte kurz, bis React vollständig gerendert ist
           window.addEventListener("load", function() {
+            // Kurze Verzögerung, bis Softr das iFrame wirklich gerendert hat
             setTimeout(function() {
+              // Lizenz + Optionen setzen
               window.iframeResizer = {
                 license: 'GPLv3',
-                heightCalculationMethod: 'auto',
-                checkOrigin: false,      // erlaubt Softr / Fremddomain
-                log: false,              // deaktiviert Debug-Logs
-                warningTimeout: 0,       // verhindert dauerhafte Warnungen
-                resizeFrom: 'child',     // saubere Höhenanpassung vom iFrame
+                checkOrigin: false,
+                log: false,
                 sizeHeight: true,
-                tolerance: 5,
-                minHeight: 100           // verhindert Fehler "height too small"
+                resizeFrom: 'child',
+                warningTimeout: 0,
+                heightCalculationMethod: 'lowestElement', // stabilste Methode
+                tolerance: 10,
+                minHeight: 120,
               };
-            }, 300); // kleine Verzögerung für React/Suspense-Render
+
+              // Falls das iFrame schon eingebettet ist, sofort ein erstes Resize senden
+              const anyWindow = window as any;
+              if (anyWindow.parentIFrame && typeof anyWindow.parentIFrame.size === "function") {
+                anyWindow.parentIFrame.size();
+              }
+            }, 300);
           });
         `}
       </Script>
 
-      {/* Child-Skript (muss exakt die gleiche Version wie im Parent sein) */}
+      {/* Script des iframe-resizer (Content Window) */}
       <Script
         src="https://cdn.jsdelivr.net/npm/iframe-resizer@4.3.9/js/iframeResizer.contentWindow.min.js"
         strategy="afterInteractive"
@@ -43,7 +56,7 @@ function GridPageContent() {
 
 export default function GridPage() {
   return (
-    <Suspense fallback={<div>Lade...</div>}>
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "2rem" }}>Lade Dashboard…</div>}>
       <GridPageContent />
     </Suspense>
   );
