@@ -20,7 +20,11 @@ function patchFilesIn(dir) {
       let content = fs.readFileSync(filePath, "utf8");
       const original = content;
       // Patch problematische "as" Konstruktionen
-      content = content.replace(/(\s|\(|\{)as(\s*[=:])/g, '$1"as"$2');
+      content = content
+  // "as" innerhalb von Objekten, z. B. { as: "style" }
+  .replace(/(\{[^}]*?)\bas(?=\s*:)/g, '$1"as"')
+  // "as" nach Klammern oder Leerzeichen
+  .replace(/(\s|\(|\{)as(\s*[=:])/g, '$1"as"$2');
       if (content !== original) {
         fs.writeFileSync(filePath, content, "utf8");
         console.log("✅ Patched:", filePath);
