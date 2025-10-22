@@ -2,16 +2,10 @@
 import fs from "fs";
 import path from "path";
 
-const ROOT = path.resolve(".next/static");
+const ROOTS = [".next"]; // durchsucht alles unter .next
 const FILE_EXT = ".js";
-
-// Ersetzt NUR Property-Keys `as:` in Objekt-Literalen => ({ as: ... }) oder (, as: ...)
-// Damit vermeiden wir falsche Treffer (z.B. in Strings oder bei `import { x as y }` gibt's hier im Output ohnehin nicht).
 const AS_PROP_REGEX = /([,{]\s*)as\s*:/g;
 
-/**
- * Patch-Funktion: lies Datei, ersetze sichere Vorkommen, schreibe zurück (nur wenn geändert)
- */
 function patchFile(filePath) {
   const src = fs.readFileSync(filePath, "utf8");
   if (!AS_PROP_REGEX.test(src)) return false;
@@ -23,9 +17,6 @@ function patchFile(filePath) {
   return false;
 }
 
-/**
- * Gehe rekursiv durch .next/static und patche alle .js-Dateien
- */
 function walkAndPatch(dir, patchedList = []) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
@@ -40,21 +31,17 @@ function walkAndPatch(dir, patchedList = []) {
 }
 
 (function main() {
-  if (!fs.existsSync(ROOT)) {
-    console.log(`⚠️  Not found: ${ROOT}`);
-    process.exit(0);
+  console.log("🩹 Running global Safari 'as' fix across .next/");
+  let patched = [];
+  for (const root of ROOTS) {
+    if (!fs.existsSync(root)) continue;
+    patched = patched.concat(walkAndPatch(root));
   }
-  console.log("🩹 Running wide Safari 'as' fix…");
-  const patched = walkAndPatch(ROOT, []);
-  if (patched.length === 0) {
-    console.log("ℹ️  Nothing to patch.");
+  if (patched.length) {
+    console.log(`✅ Patched ${patched.length} JS file(s).`);
+    patched.slice(0, 10).forEach(f => console.log("→", f));
   } else {
-    // kurze, lesbare Ausgabe – nicht alles spammen
-    const head = patched.slice(0, 10).map(p => `✅ Patched: ${p}`).join("\n");
-    console.log(head);
-    if (patched.length > 10) {
-      console.log(`…and ${patched.length - 10} more file(s).`);
-    }
+    console.log("ℹ️ No matches found. Nothing to patch.");
   }
   console.log("🚀 Safari fix complete.");
 })();
