@@ -1,3 +1,10 @@
+declare global {
+  interface Window {
+    parentIFrame?: {
+      size?: () => void;
+    };
+  }
+}
 "use client";
 import "./grid.css";
 import { useEffect, useState } from "react";
