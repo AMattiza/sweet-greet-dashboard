@@ -187,15 +187,11 @@ export default function GridInner() {
             prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
           );
 
-         // 🧩 iframe-resizer: dynamische Höhenanpassung nach Render
-if (
-  typeof window !== "undefined" &&
-  (window as unknown as { parentIFrame?: any }).parentIFrame?.size
-) {
+ // 🧩 iframe-resizer: dynamische Höhenanpassung nach Render
+if (typeof window !== "undefined" && window["parentIFrame"]?.size) {
   setTimeout(() => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).parentIFrame.size();
+      window["parentIFrame"].size();
     } catch {
       // fails silently if iframeResizer not loaded
     }
