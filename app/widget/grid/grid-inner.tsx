@@ -5,15 +5,6 @@ import { useSearchParams } from "next/navigation";
 import CardDistribution from "./CardDistribution";
 import CardDistributionBar from "./CardDistributionBar";
 
-/** ✅ Ergänzung: Damit TS `window.parentIFrame` kennt */
-declare global {
-  interface Window {
-    parentIFrame?: {
-      size: () => void;
-    };
-  }
-}
-
 type KPIConf = {
   label: string;
   table: string;
@@ -195,11 +186,14 @@ export default function GridInner() {
             prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
           );
 
-          /** 🔧 iFrame-Höhe nach Datenupdate anpassen */
-          if (typeof window !== "undefined" && window.parentIFrame?.size) {
-            setTimeout(() => {
-              window.parentIFrame?.size();
-            }, 300); // 300 ms nach DOM-Update für stabile Höhe
+          // 🧩 TS-sicheres iFrame-Resize nach Daten-Update
+          if (typeof window !== "undefined") {
+            const anyWindow = window as any;
+            if (anyWindow.parentIFrame && typeof anyWindow.parentIFrame.size === "function") {
+              setTimeout(() => {
+                anyWindow.parentIFrame.size();
+              }, 500); // verzögert nach Render
+            }
           }
         })
         .catch((e) =>
