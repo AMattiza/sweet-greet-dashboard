@@ -187,12 +187,17 @@ export default function GridInner() {
             prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
           );
 
-          // 🧩 iframe-resizer: dynamische Höhenanpassung nach Render
-          if (typeof window !== "undefined") {
-            const anyWindow = window as any;
-            if (anyWindow.parentIFrame?.size) {
-              setTimeout(() => anyWindow.parentIFrame.size(), 500);
-            }
+         // 🧩 iframe-resizer: dynamische Höhenanpassung nach Render
+if (typeof window !== "undefined" && (window as unknown as { parentIFrame?: any }).parentIFrame?.size) {
+  setTimeout(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).parentIFrame.size();
+    } catch (_) {
+      // fails silently if iframeResizer not loaded
+    }
+  }, 500);
+}
           }
         })
         .catch((e) =>
