@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && next telemetry disable",
     "start": "next start"
   },
   "dependencies": {
@@ -17,6 +17,13 @@
   "devDependencies": {
     "typescript": "^5.5.3",
     "@types/react": "^18.2.66",
-    "@types/node": "^20.11.30"
+    "@types/node": "^20.11.30",
+
+    // 👇 Fix für Vercel-Builds (fehlende SWC-Compiler)
+    "@next/swc-linux-x64-gnu": "14.2.5",
+    "@next/swc-linux-x64-musl": "14.2.5",
+    "@next/swc-darwin-arm64": "14.2.5",
+    "@next/swc-darwin-x64": "14.2.5",
+    "@next/swc-win32-x64-msvc": "14.2.5"
   }
 }
