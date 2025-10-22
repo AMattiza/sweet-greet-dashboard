@@ -5,6 +5,15 @@ import { useSearchParams } from "next/navigation";
 import CardDistribution from "./CardDistribution";
 import CardDistributionBar from "./CardDistributionBar";
 
+/** ✅ Ergänzung: Damit TS `window.parentIFrame` kennt */
+declare global {
+  interface Window {
+    parentIFrame?: {
+      size: () => void;
+    };
+  }
+}
+
 type KPIConf = {
   label: string;
   table: string;
@@ -186,11 +195,11 @@ export default function GridInner() {
             prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
           );
 
-          /** 🔧 >>> HIER NEU: iFrame-Höhe nach Datenupdate anpassen <<< */
+          /** 🔧 iFrame-Höhe nach Datenupdate anpassen */
           if (typeof window !== "undefined" && window.parentIFrame?.size) {
             setTimeout(() => {
-              window.parentIFrame.size();
-            }, 300); // 300ms nach DOM-Update für stabile Höhe
+              window.parentIFrame?.size();
+            }, 300); // 300 ms nach DOM-Update für stabile Höhe
           }
         })
         .catch((e) =>
