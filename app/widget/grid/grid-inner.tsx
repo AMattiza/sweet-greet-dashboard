@@ -47,19 +47,20 @@ type CountResp = {
 type ApiResp = DistributionResp | CountResp;
 
 function Card({ conf, data, err }: { conf: KPIConf; data?: any; err?: string }) {
-  if (
-    (data && "type" in data && data.type === "distribution") ||
-    conf.statusLogic === "distribution" ||
-    conf.statusLogic === "distribution-bar"
-  ) {
-    const useBar = conf.statusLogic === "distribution-bar";
-    return useBar ? (
-      <CardDistributionBar conf={conf} data={data} />
-    ) : (
-      <CardDistribution conf={conf} data={data} />
-    );
+  // ✅ 1. Nur Distribution-Bar
+  if (conf.statusLogic === "distribution-bar") {
+    return <CardDistributionBar conf={conf} data={data} />;
   }
 
+  // ✅ 2. Klassische Distribution
+  if (
+    conf.statusLogic === "distribution" ||
+    (data && "type" in data && data.type === "distribution")
+  ) {
+    return <CardDistribution conf={conf} data={data} />;
+  }
+
+  // ✅ 3. Normale KPI-Cards
   const simpleMode = conf.logicType === "Nur zählen";
 
   const parseNum = (val?: string) => {
@@ -186,13 +187,11 @@ export default function GridInner() {
             prev.map((p, idx) => (idx === i ? { conf: c, data } : p))
           );
 
-          // 🧩 TS-sicheres iFrame-Resize nach Daten-Update
+          // 🧩 iframe-resizer: dynamische Höhenanpassung nach Render
           if (typeof window !== "undefined") {
             const anyWindow = window as any;
-            if (anyWindow.parentIFrame && typeof anyWindow.parentIFrame.size === "function") {
-              setTimeout(() => {
-                anyWindow.parentIFrame.size();
-              }, 500); // verzögert nach Render
+            if (anyWindow.parentIFrame?.size) {
+              setTimeout(() => anyWindow.parentIFrame.size(), 500);
             }
           }
         })
@@ -209,9 +208,9 @@ export default function GridInner() {
       <div className="grid-container">
         {items.map((it, idx) => {
           const isDistribution =
-            (it.data && "type" in it.data && it.data.type === "distribution") ||
             it.conf.statusLogic === "distribution" ||
-            it.conf.statusLogic === "distribution-bar";
+            it.conf.statusLogic === "distribution-bar" ||
+            (it.data && "type" in it.data && it.data.type === "distribution");
 
           const wrapperClass = isDistribution
             ? "grid-item distribution-wrapper"
