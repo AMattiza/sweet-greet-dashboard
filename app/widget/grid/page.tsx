@@ -1,23 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import Script from "next/script";
+import dynamic from "next/dynamic";
 import "./grid.css";
-import GridInner from "./grid-inner";
 
-export default function GridPage() {
+const GridInner = dynamic(() => import("./grid-inner"), { ssr: false });
+
+function GridPageContent() {
   useEffect(() => {
     const parentIFrame = (window as any).parentIFrame;
     const triggerResize = () => parentIFrame?.resize?.();
-
-    // Sofort beim Laden
     triggerResize();
 
-    // Reaktion auf Layout-Änderungen
     const ro = new ResizeObserver(triggerResize);
     ro.observe(document.body);
 
-    // Browser-Resize
     window.addEventListener("resize", triggerResize);
     window.addEventListener("orientationchange", triggerResize);
     document.addEventListener("visibilitychange", triggerResize);
@@ -32,14 +30,21 @@ export default function GridPage() {
 
   return (
     <>
-      {/* iFrame Resizer (child) */}
+      {/* iframe-resizer child script */}
       <Script
         id="iframe-resizer-child"
         src="https://cdn.jsdelivr.net/npm/iframe-resizer@4.3.9/js/iframeResizer.contentWindow.min.js"
         strategy="beforeInteractive"
       />
-
       <GridInner />
     </>
+  );
+}
+
+export default function GridPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "2rem" }}>Lade Dashboard…</div>}>
+      <GridPageContent />
+    </Suspense>
   );
 }
