@@ -6,19 +6,18 @@ import "./grid.css";
 import GridInner from "./grid-inner";
 
 function GridPageContent() {
-  // Fallback/Extra-Trigger für Resizes (siehe Schritt 2)
   useEffect(() => {
     const parentIFrame = (window as any).parentIFrame;
 
-    // Sofort nach Hydration einmal messen
-    parentIFrame?.size?.();
+    // 1️⃣  Sofortige erste Größenanpassung
+    parentIFrame?.resize?.();
 
-    // Reagieren auf Layout-Änderungen im Child (Grid breakpoints etc.)
-    const ro = new ResizeObserver(() => parentIFrame?.size?.());
+    // 2️⃣  Beobachte Layout-Änderungen im Child (z. B. Grid-Breakpoints)
+    const ro = new ResizeObserver(() => parentIFrame?.resize?.());
     ro.observe(document.body);
 
-    // Zusätzliche Events
-    const onResize = () => parentIFrame?.size?.();
+    // 3️⃣  Reagiere auf Fenster- und Sichtbarkeitsänderungen
+    const onResize = () => parentIFrame?.resize?.();
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     document.addEventListener("visibilitychange", onResize);
@@ -33,22 +32,33 @@ function GridPageContent() {
 
   return (
     <>
-      {/* 1) KONFIG – rein in pures JS, ohne TS-Keywords */}
-      <Script id="ifr-config" strategy="beforeInteractive">
+      {/* 1️⃣ iFrame-Resizer-Konfiguration */}
+      <Script id="iframe-resizer-init" strategy="afterInteractive">
         {`
-          window.iFrameResizer = {
-            log: false,
-            checkOrigin: false,
-            sizeHeight: true,
-            resizeFrom: 'child',
-            heightCalculationMethod: 'max',
-            tolerance: 10,
-            minHeight: 120
-          };
+          window.addEventListener("load", function() {
+            setTimeout(function() {
+              window.iframeResizer = {
+                license: 'GPLv3',
+                checkOrigin: false,
+                log: false,
+                sizeHeight: true,
+                resizeFrom: 'child',
+                warningTimeout: 0,
+                heightCalculationMethod: 'auto', // moderne Methode
+                tolerance: 10,
+                minHeight: 120,
+              };
+
+              const anyWindow = window;
+              if (anyWindow.parentIFrame && typeof anyWindow.parentIFrame.resize === "function") {
+                anyWindow.parentIFrame.resize(); // statt size()
+              }
+            }, 300);
+          });
         `}
       </Script>
 
-      {/* 2) CHILD-SKRIPT – vor der Interaktion laden */}
+      {/* 2️⃣ iFrame-Resizer-Child-Script */}
       <Script
         id="ifr-child"
         src="https://cdn.jsdelivr.net/npm/iframe-resizer@4.3.9/js/iframeResizer.contentWindow.min.js"
@@ -56,6 +66,7 @@ function GridPageContent() {
         crossOrigin="anonymous"
       />
 
+      {/* 3️⃣ Inhalt */}
       <GridInner />
     </>
   );
@@ -63,7 +74,9 @@ function GridPageContent() {
 
 export default function GridPage() {
   return (
-    <Suspense fallback={<div style={{ textAlign: "center", padding: "2rem" }}>Lade Dashboard…</div>}>
+    <Suspense
+      fallback={<div style={{ textAlign: "center", padding: "2rem" }}>Lade Dashboard…</div>}
+    >
       <GridPageContent />
     </Suspense>
   );
