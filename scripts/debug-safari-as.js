@@ -3,33 +3,40 @@
  * -------------------------------------
  * Sucht in allen kompilierten JS-Dateien nach problematischen
  * ".as", "as:" oder ähnlichen Mustern und schreibt Treffer in
- * eine Logdatei unter ./as-debug.log
+ * ./public/as-debug.log, damit die Datei online abrufbar ist.
  */
 
 import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 
+console.log("🔍 Running Safari '.as' Deep Debug scan...");
+
 const ROOT = ".next";
 const TARGET_DIRS = [
   path.join(ROOT, "static", "chunks"),
   path.join(ROOT, "server", "chunks"),
-  path.join(ROOT, "server", "app")
+  path.join(ROOT, "server", "app"),
 ];
+const LOGFILE = "public/as-debug.log";
 
-const LOGFILE = "as-debug.log";
 const matches = [];
 
+/** Scannt den Inhalt einer Datei nach verdächtigen .as-Mustern */
 function scan(content, filePath) {
   const lines = content.split("\n");
   lines.forEach((line, idx) => {
-    // prüft typische Safari-Fehlerauslöser
     if (/\.\s*["']as["']/.test(line) || /\.as\s*["']/.test(line)) {
-      matches.push({ file: filePath, line: idx + 1, snippet: line.slice(0, 200) });
+      matches.push({
+        file: filePath,
+        line: idx + 1,
+        snippet: line.slice(0, 200),
+      });
     }
   });
 }
 
+/** Liest Datei-Inhalt (normal, gzip, brotli) */
 function readFileContent(file) {
   if (file.endsWith(".br")) {
     return zlib.brotliDecompressSync(fs.readFileSync(file)).toString("utf8");
@@ -40,6 +47,7 @@ function readFileContent(file) {
   }
 }
 
+/** Läuft rekursiv durch alle Dateien */
 function walk(dir) {
   if (!fs.existsSync(dir)) return;
   for (const f of fs.readdirSync(dir)) {
@@ -57,12 +65,15 @@ function walk(dir) {
   }
 }
 
-console.log("🔍 Running Safari '.as' Deep Debug scan...");
+/** Hauptprozess */
 for (const dir of TARGET_DIRS) walk(dir);
 
 if (matches.length > 0) {
   fs.writeFileSync(LOGFILE, JSON.stringify(matches, null, 2));
   console.log(`❗ Found ${matches.length} suspicious lines. Written to ${LOGFILE}`);
+  matches.forEach((m) =>
+    console.log(`🧠 ${m.file}:${m.line} → ${m.snippet.slice(0, 120)}...`)
+  );
 } else {
   console.log("✅ No suspicious '.as' syntax found in compiled code.");
 }
