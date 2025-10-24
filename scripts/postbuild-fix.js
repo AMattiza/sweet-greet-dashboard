@@ -1,5 +1,19 @@
+/**
+ * Extended Safari 'as' Fix (v2.2)
+ * -------------------------------------
+ * Dieses Script durchsucht alle .js-, .js.br- und .js.gz-Dateien
+ * im .next-Ordner nach problematischen "as"-Konstruktionen und
+ * ersetzt sie durch valide Syntax für Safari (WebKit).
+ *
+ * Es behebt:
+ *   - SyntaxError: Unexpected string literal "as"
+ *   - Safari .as() Parsefehler in minifizierten Builds
+ *   - Auch komprimierte .br / .gz Dateien werden gepatcht
+ */
+
 import fs from "fs";
 import path from "path";
+import zlib from "zlib";
 
 const ROOT = ".next";
 const TARGET_DIRS = [
@@ -8,41 +22,69 @@ const TARGET_DIRS = [
   path.join(ROOT, "server", "app")
 ];
 
+// Hilfsfunktion: Patcht Textinhalt
+function patchContent(content) {
+  return content
+    // { as: "style" } → {"as": "style"}
+    .replace(/(\{[^}]*?)\bas(?=\s*:)/g, '$1"as"')
+    //  (as=...) oder { as=... } → ("as"=...)
+    .replace(/(\s|\(|\{)as(\s*[=:])/g, '$1"as"$2');
+}
+
+// Hauptfunktion: Patchen von Dateien
 function patchFilesIn(dir) {
   if (!fs.existsSync(dir)) return;
-  const files = fs.readdirSync(dir);
 
-  for (const file of files) {
+  for (const file of fs.readdirSync(dir)) {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
       patchFilesIn(filePath);
-    } else if (file.endsWith(".js")) {
-      let content = fs.readFileSync(filePath, "utf8");
-      const original = content;
+      continue;
+    }
 
-      // === Safari Fix – erweitert für Inline-Fälle ===
-      content = content
-        // 1. {as:"style"} → {"as":"style"}
-        .replace(/\{as:/g, '{"as":')
-        // 2. { as: "..." } → {"as":"..."}
-        .replace(/\{\s*as\s*:/g, '{"as":')
-        // 3. (as:"") → ("as":"")
-        .replace(/\(as\s*:/g, '("as":')
-        // 4. o.default.preinit(e,{as:"style"}) → o.default.preinit(e,{"as":"style"})
-        .replace(/preinit\(([^)]*?)\{as:/g, 'preinit($1{"as":')
-        // 5. Sicherheitshalber doppelte Quotes normalisieren
-        .replace(/"{2,}/g, '"');
+    // Nur relevante Dateien patchen
+    if (file.endsWith(".js")) {
+      const original = fs.readFileSync(filePath, "utf8");
+      const patched = patchContent(original);
+      if (patched !== original) {
+        fs.writeFileSync(filePath, patched, "utf8");
+        console.log("✅ Patched JS:", filePath);
+      }
+    }
 
-      if (content !== original) {
-        fs.writeFileSync(filePath, content, "utf8");
-        console.log("✅ Patched:", filePath);
+    // Brotli-komprimierte Dateien
+    else if (file.endsWith(".js.br")) {
+      const buffer = fs.readFileSync(filePath);
+      const unzipped = zlib.brotliDecompressSync(buffer).toString("utf8");
+      const patched = patchContent(unzipped);
+      if (patched !== unzipped) {
+        const recompressed = zlib.brotliCompressSync(Buffer.from(patched));
+        fs.writeFileSync(filePath, recompressed);
+        console.log("✅ Patched Brotli:", filePath);
+      }
+    }
+
+    // Gzip-komprimierte Dateien
+    else if (file.endsWith(".js.gz")) {
+      const buffer = fs.readFileSync(filePath);
+      const unzipped = zlib.gunzipSync(buffer).toString("utf8");
+      const patched = patchContent(unzipped);
+      if (patched !== unzipped) {
+        const recompressed = zlib.gzipSync(Buffer.from(patched));
+        fs.writeFileSync(filePath, recompressed);
+        console.log("✅ Patched Gzip:", filePath);
       }
     }
   }
 }
 
+// Log-Ausgabe für bessere Nachvollziehbarkeit
 console.log("🩹 Running EXTENDED Safari 'as' deep fix...");
-TARGET_DIRS.forEach(patchFilesIn);
+
+for (const dir of TARGET_DIRS) {
+  patchFilesIn(dir);
+}
+
 console.log("🚀 Safari fix deep completed.");
