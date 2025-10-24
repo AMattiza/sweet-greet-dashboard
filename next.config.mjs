@@ -1,33 +1,34 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: false, // du willst keine Minify-Fehler riskieren
+  swcMinify: false,
   compress: true,
   experimental: { esmExternals: false },
 
-  // ✅ Jede Build-ID wird eindeutig – Safari bekommt neue Chunks
-  generateBuildId: async () => Date.now().toString(),
+  // Erzwinge komplett neue Build-ID bei jedem Deploy
+  generateBuildId: async () =>
+    `build-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
 
-  // ✅ Header bleiben erhalten
+  // Deaktiviere Browser- und CDN-Cache für JS
   headers: async () => [
     {
       source: "/(.*)",
       headers: [
+        { key: "Cache-Control", value: "no-store" },
         { key: "X-Frame-Options", value: "ALLOWALL" },
-        { key: "Content-Encoding", value: "" } // verhindert doppelte Brotli-Angabe
-      ]
-    }
+        { key: "Content-Encoding", value: "" },
+      ],
+    },
   ],
 
-  // ✅ Erzwinge neue Dateinamen für Chunks (Cache-Bust)
   webpack: (config, { isServer }) => {
-  // Nur für Client-Builds (Browser-Seite)
-  if (!isServer) {
-    config.output.filename = "static/chunks/[name].[contenthash].js";
-    config.output.chunkFilename = "static/chunks/[name].[contenthash].js";
-  }
-  return config;
-},
+    if (!isServer) {
+      // neue Dateinamen erzwingen – Safari kann nichts mehr cachen
+      config.output.filename = "static/chunks/[name].[contenthash:8].mjs";
+      config.output.chunkFilename = "static/chunks/[name].[contenthash:8].mjs";
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
