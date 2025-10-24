@@ -1,10 +1,10 @@
 /**
- * Safari 'as' Hot Patch (after Vercel compression)
+ * Safari 'as' Deep Patch (after Vercel compression)
  * -------------------------------------------------
- * Repariert problematische .js.br-Dateien, die Safari sonst
- * mit "Unexpected string literal 'as'" ablehnt.
+ * Repariert ALLE Brotli- (.br) und Gzip- (.gz) Dateien im .next-Output,
+ * die Safari sonst mit „Unexpected string literal 'as'“ ablehnt.
  *
- * Läuft nur, wenn das Environment auf Vercel aktiv ist.
+ * Läuft automatisch auf Vercel nach der Kompression.
  */
 
 import fs from "fs";
@@ -16,34 +16,56 @@ if (!process.env.VERCEL) {
   process.exit(0);
 }
 
-const OUT = ".next/static/chunks";
+const TARGET_DIRS = [
+  ".next/static/chunks",
+  ".next/static/chunks/app",
+  ".next/server/chunks",
+  ".next/server/app"
+];
 
-console.log("🧩 Running Safari post-compression fix...");
+console.log("🧩 Running Safari Deep Patch (post-compression)...");
 
 function patch(content) {
   return content
+    // { as: "x" } → { "as": "x" }
     .replace(/(\{[^}]*?)\bas(?=\s*:)/g, '$1"as"')
-    .replace(/(\s|\(|\{)as(\s*[=:])/g, '$1"as"$2');
+    // .as("x") → ["as"]("x")
+    .replace(/\.as(?=\s*\()/g, '["as"]')
+    // as= → "as"=
+    .replace(/(\s)as(?=\s*=)/g, '$1"as"');
 }
 
-if (fs.existsSync(OUT)) {
-  for (const file of fs.readdirSync(OUT)) {
-    const filePath = path.join(OUT, file);
-    if (file.endsWith(".js.br")) {
-      try {
-        const raw = fs.readFileSync(filePath);
-        const dec = zlib.brotliDecompressSync(raw).toString("utf8");
-        const patched = patch(dec);
-        if (patched !== dec) {
-          const compressed = zlib.brotliCompressSync(Buffer.from(patched));
-          fs.writeFileSync(filePath, compressed);
-          console.log("✅ Patched Brotli:", file);
-        }
-      } catch (e) {
-        console.warn("⚠️ Failed to patch:", file, e.message);
-      }
+function patchFile(filePath) {
+  try {
+    const buf = fs.readFileSync(filePath);
+    let decoded;
+    if (filePath.endsWith(".br")) decoded = zlib.brotliDecompressSync(buf).toString("utf8");
+    else if (filePath.endsWith(".gz")) decoded = zlib.gunzipSync(buf).toString("utf8");
+    else return;
+
+    const patched = patch(decoded);
+    if (patched !== decoded) {
+      const rec = filePath.endsWith(".br")
+        ? zlib.brotliCompressSync(Buffer.from(patched))
+        : zlib.gzipSync(Buffer.from(patched));
+      fs.writeFileSync(filePath, rec);
+      console.log("✅ Patched:", filePath);
     }
+  } catch (e) {
+    console.warn("⚠️ Failed:", filePath, e.message);
   }
 }
 
-console.log("🚀 Safari post-compression fix complete.");
+function walk(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const f of fs.readdirSync(dir)) {
+    const p = path.join(dir, f);
+    const s = fs.statSync(p);
+    if (s.isDirectory()) walk(p);
+    else if (f.endsWith(".js.br") || f.endsWith(".js.gz")) patchFile(p);
+  }
+}
+
+for (const dir of TARGET_DIRS) walk(dir);
+
+console.log("🚀 Safari Deep Patch (post-compression) complete.");
