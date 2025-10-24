@@ -1,9 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: false, // verhindert fehlerhafte Minifizierung
+  swcMinify: false, // du willst keine Minify-Fehler riskieren
   compress: true,
   experimental: { esmExternals: false },
+
+  // ✅ Jede Build-ID wird eindeutig – Safari bekommt neue Chunks
+  generateBuildId: async () => Date.now().toString(),
+
+  // ✅ Header bleiben erhalten
   headers: async () => [
     {
       source: "/(.*)",
@@ -12,6 +17,14 @@ const nextConfig = {
         { key: "Content-Encoding", value: "" } // verhindert doppelte Brotli-Angabe
       ]
     }
-  ]
+  ],
+
+  // ✅ Erzwinge neue Dateinamen für Chunks (Cache-Bust)
+  webpack: (config) => {
+    config.output.filename = "static/chunks/[name].[contenthash].js";
+    config.output.chunkFilename = "static/chunks/[name].[contenthash].js";
+    return config;
+  },
 };
+
 export default nextConfig;
