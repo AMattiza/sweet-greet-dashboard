@@ -20,11 +20,14 @@ const nextConfig = {
   ],
 
   // ✅ Erzwinge neue Dateinamen für Chunks (Cache-Bust)
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
+  // Nur für Client-Builds (Browser-Seite)
+  if (!isServer) {
     config.output.filename = "static/chunks/[name].[contenthash].js";
     config.output.chunkFilename = "static/chunks/[name].[contenthash].js";
-    return config;
-  },
+  }
+  return config;
+},
 };
 
 export default nextConfig;
