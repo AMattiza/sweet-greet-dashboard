@@ -3,7 +3,7 @@
  * -------------------------------------
  * Sucht in allen kompilierten JS-Dateien nach problematischen
  * ".as", "as:" oder ähnlichen Mustern und schreibt Treffer in
- * ./public/as-debug.log, damit die Datei online abrufbar ist.
+ * ./public/as-debug.log, damit sie nach dem Deploy einsehbar sind.
  */
 
 import fs from "fs";
@@ -12,6 +12,7 @@ import zlib from "zlib";
 
 console.log("🔍 Running Safari '.as' Deep Debug scan...");
 
+// Konfiguration
 const ROOT = ".next";
 const TARGET_DIRS = [
   path.join(ROOT, "static", "chunks"),
@@ -19,10 +20,11 @@ const TARGET_DIRS = [
   path.join(ROOT, "server", "app"),
 ];
 const LOGFILE = "public/as-debug.log";
-
 const matches = [];
 
-/** Scannt den Inhalt einer Datei nach verdächtigen .as-Mustern */
+/**
+ * Scannt den Inhalt einer Datei nach problematischen ".as" Mustern.
+ */
 function scan(content, filePath) {
   const lines = content.split("\n");
   lines.forEach((line, idx) => {
@@ -36,7 +38,9 @@ function scan(content, filePath) {
   });
 }
 
-/** Liest Datei-Inhalt (normal, gzip, brotli) */
+/**
+ * Liest Dateiinhalt – unterstützt .js, .js.br und .js.gz
+ */
 function readFileContent(file) {
   if (file.endsWith(".br")) {
     return zlib.brotliDecompressSync(fs.readFileSync(file)).toString("utf8");
@@ -47,14 +51,17 @@ function readFileContent(file) {
   }
 }
 
-/** Läuft rekursiv durch alle Dateien */
+/**
+ * Durchläuft alle Dateien in einem Verzeichnis rekursiv.
+ */
 function walk(dir) {
   if (!fs.existsSync(dir)) return;
   for (const f of fs.readdirSync(dir)) {
     const full = path.join(dir, f);
     const stat = fs.statSync(full);
-    if (stat.isDirectory()) walk(full);
-    else if (/\.(js|js\.br|js\.gz)$/.test(f)) {
+    if (stat.isDirectory()) {
+      walk(full);
+    } else if (/\.(js|js\.br|js\.gz)$/.test(f)) {
       try {
         const content = readFileContent(full);
         scan(content, full);
@@ -65,9 +72,16 @@ function walk(dir) {
   }
 }
 
-/** Hauptprozess */
+// Hauptausführung
 for (const dir of TARGET_DIRS) walk(dir);
 
+// ✅ Stelle sicher, dass ./public existiert
+const logDir = path.dirname(LOGFILE);
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+// Schreibe Logdatei oder gib "ok" aus
 if (matches.length > 0) {
   fs.writeFileSync(LOGFILE, JSON.stringify(matches, null, 2));
   console.log(`❗ Found ${matches.length} suspicious lines. Written to ${LOGFILE}`);
@@ -77,3 +91,5 @@ if (matches.length > 0) {
 } else {
   console.log("✅ No suspicious '.as' syntax found in compiled code.");
 }
+
+console.log("🚀 Safari '.as' Deep Debug complete.");
