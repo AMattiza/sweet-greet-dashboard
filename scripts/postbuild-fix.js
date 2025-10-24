@@ -1,14 +1,10 @@
 /**
- * Extended Safari 'as' Fix (v2.2)
+ * Safari Fix v3.5 – Final Safe Rewrite
  * -------------------------------------
- * Dieses Script durchsucht alle .js-, .js.br- und .js.gz-Dateien
- * im .next-Ordner nach problematischen "as"-Konstruktionen und
- * ersetzt sie durch valide Syntax für Safari (WebKit).
+ * Entfernt problematische `.as`-Konstrukte in kompilierten Next.js-Bundles.
+ * Behebt: SyntaxError: Unexpected string literal "as"
  *
- * Es behebt:
- *   - SyntaxError: Unexpected string literal "as"
- *   - Safari .as() Parsefehler in minifizierten Builds
- *   - Auch komprimierte .br / .gz Dateien werden gepatcht
+ * Unterstützt auch Brotli- und Gzip-Dateien.
  */
 
 import fs from "fs";
@@ -19,72 +15,73 @@ const ROOT = ".next";
 const TARGET_DIRS = [
   path.join(ROOT, "static", "chunks"),
   path.join(ROOT, "server", "chunks"),
-  path.join(ROOT, "server", "app")
+  path.join(ROOT, "server", "app"),
 ];
 
-// Hilfsfunktion: Patcht Textinhalt
+console.log("🩹 Running Safari Fix v3.5 – Final Safe Rewrite...");
+
+/** Haupt-Patchfunktion */
 function patchContent(content) {
-  return content
-    // { as: "style" } → {"as": "style"}
-    .replace(/(\{[^}]*?)\bas(?=\s*:)/g, '$1"as"')
-    //  (as=...) oder { as=... } → ("as"=...)
-    .replace(/(\s|\(|\{)as(\s*[=:])/g, '$1"as"$2');
+  return (
+    content
+      // 1️⃣ .as( → ["as"](   (Funktionsaufruf)
+      .replace(/\.as(?=\s*\()/g, '["as"]')
+      // 2️⃣ { as: → { "as":   (Objektliteral)
+      .replace(/(\{[^{}]*?)\bas(?=\s*:)/g, '$1"as"')
+      // 3️⃣ as: → "as":  (Fallback für Minify-Kombinationen)
+      .replace(/([\{,]\s*)as(?=\s*:)/g, '$1"as"')
+      // 4️⃣ as =  → "as" =  (Zuweisungen)
+      .replace(/(\s)as(?=\s*=)/g, '$1"as"')
+  );
 }
 
-// Hauptfunktion: Patchen von Dateien
-function patchFilesIn(dir) {
-  if (!fs.existsSync(dir)) return;
-
-  for (const file of fs.readdirSync(dir)) {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      patchFilesIn(filePath);
-      continue;
-    }
-
-    // Nur relevante Dateien patchen
-    if (file.endsWith(".js")) {
-      const original = fs.readFileSync(filePath, "utf8");
-      const patched = patchContent(original);
-      if (patched !== original) {
+/** Patcht einzelne Datei (JS, BR, GZ) */
+function patchFile(filePath) {
+  const ext = path.extname(filePath);
+  try {
+    let content;
+    if (ext === ".br") {
+      content = zlib.brotliDecompressSync(fs.readFileSync(filePath)).toString("utf8");
+      const patched = patchContent(content);
+      if (patched !== content) {
+        fs.writeFileSync(filePath, zlib.brotliCompressSync(Buffer.from(patched)));
+        console.log("✅ Patched Brotli:", filePath);
+      }
+    } else if (ext === ".gz") {
+      content = zlib.gunzipSync(fs.readFileSync(filePath)).toString("utf8");
+      const patched = patchContent(content);
+      if (patched !== content) {
+        fs.writeFileSync(filePath, zlib.gzipSync(Buffer.from(patched)));
+        console.log("✅ Patched Gzip:", filePath);
+      }
+    } else if (filePath.endsWith(".js")) {
+      content = fs.readFileSync(filePath, "utf8");
+      const patched = patchContent(content);
+      if (patched !== content) {
         fs.writeFileSync(filePath, patched, "utf8");
         console.log("✅ Patched JS:", filePath);
       }
     }
+  } catch (err) {
+    console.warn("⚠️ Patch failed for:", filePath, err.message);
+  }
+}
 
-    // Brotli-komprimierte Dateien
-    else if (file.endsWith(".js.br")) {
-      const buffer = fs.readFileSync(filePath);
-      const unzipped = zlib.brotliDecompressSync(buffer).toString("utf8");
-      const patched = patchContent(unzipped);
-      if (patched !== unzipped) {
-        const recompressed = zlib.brotliCompressSync(Buffer.from(patched));
-        fs.writeFileSync(filePath, recompressed);
-        console.log("✅ Patched Brotli:", filePath);
-      }
-    }
-
-    // Gzip-komprimierte Dateien
-    else if (file.endsWith(".js.gz")) {
-      const buffer = fs.readFileSync(filePath);
-      const unzipped = zlib.gunzipSync(buffer).toString("utf8");
-      const patched = patchContent(unzipped);
-      if (patched !== unzipped) {
-        const recompressed = zlib.gzipSync(Buffer.from(patched));
-        fs.writeFileSync(filePath, recompressed);
-        console.log("✅ Patched Gzip:", filePath);
-      }
+/** Läuft rekursiv durch Verzeichnisse */
+function walk(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const file of fs.readdirSync(dir)) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      walk(filePath);
+    } else if (/\.(js|js\.br|js\.gz)$/.test(file)) {
+      patchFile(filePath);
     }
   }
 }
 
-// Log-Ausgabe für bessere Nachvollziehbarkeit
-console.log("🩹 Running EXTENDED Safari 'as' deep fix...");
+// Start
+for (const dir of TARGET_DIRS) walk(dir);
 
-for (const dir of TARGET_DIRS) {
-  patchFilesIn(dir);
-}
-
-console.log("🚀 Safari fix deep completed.");
+console.log("🚀 Safari Fix v3.5 completed – all problematic '.as' usages rewritten.");
