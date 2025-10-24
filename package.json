@@ -5,8 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node ./scripts/postbuild-fix.js && next telemetry disable",
-    "vercel-build": "next build && node ./scripts/postbuild-fix.js && node ./scripts/fix-after-compression.js",
+
+    // Lokaler Build (mit Fix & Debug)
+    "build": "next build && node ./scripts/postbuild-fix.js && node ./scripts/debug-safari-as.js && next telemetry disable",
+
+    // Vercel-Build (gleiches Verhalten online)
+    "vercel-build": "next build && node ./scripts/postbuild-fix.js && node ./scripts/debug-safari-as.js",
+
     "start": "next start"
   },
   "dependencies": {
